@@ -1,0 +1,40 @@
+<%# meal-planner/views/partials/header.ejs %>
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'EMERUS Kuhinja' %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <header class="site-header"> 
+        <div class="header-content-wrapper">
+            <h1 class="site-title">
+                <a href="/" class="site-logo-link">
+                    <img src="https://scontent-vie1-1.xx.fbcdn.net/v/t39.30808-6/282124913_489587346298230_1273819798272166110_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=Nj7rSCOwcZ4Q7kNvwFbm2XW&_nc_oc=AdkWb-jnaOK8BYiWLlGBXynOMg0uP_1o7mXHy43E8EUvy2GyzgBU4Vo9Yn3eRB3rAro&_nc_zt=23&_nc_ht=scontent-vie1-1.xx&_nc_gid=5simA9S1G-OvlY4NJwlSpg&oh=00_AfKXXAly8eru3yMkUVeEmkK6Cmhy8nGB4luj4YCZuKcnDw&oe=683B836E" alt="Emerus Kuhinja Logo" class="header-logo-img">
+                    <span class="logo-text">EMERUS Kuhinja</span>
+                </a>
+            </h1>
+            <nav class="main-navigation">
+                <div class="nav-items-wrapper">
+                    <% if (user) { %>
+                        <span class="nav-welcome-message">Dobrodošli, <%= user.username %>!</span>
+                        <a href="/dashboard" class="nav-link <%= (currentPath === '/dashboard' || (currentPath === '/' && user)) ? 'active' : '' %>">Menu</a>
+                        <% if (user.is_admin) { %>
+                            <a href="/admin" class="nav-link <%= currentPath && currentPath.startsWith('/admin') ? 'active' : '' %>">Admin Panel</a>
+                        <% } %>
+                        <a href="/logout" class="nav-link">Odjava</a>
+                    <% } else { %>
+                        <% if (currentPath !== '/') { %>
+                            <a href="/" class="nav-link <%= currentPath === '/' ? 'active' : '' %>">Menu</a>
+                        <% } %>
+                        <a href="/login" class="nav-link <%= currentPath === '/login' ? 'active' : '' %>">Prijava</a>
+                        <a href="/register" class="nav-link <%= currentPath === '/register' ? 'active' : '' %>">Registracija</a>
+                    <% } %>
+                </div>
+            </nav>
+        </div>
+    </header>
+    <main class="container <%= (typeof isGuestView !== 'undefined' && isGuestView) ? 'guest-view-container' : '' %>">
+        <%# Sadržaj stranice %>

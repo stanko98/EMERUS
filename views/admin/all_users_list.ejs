@@ -1,0 +1,50 @@
+<%- include('../partials/header', { title: title }) %>
+
+<h2><%= title %> (<%= allUsersList.length %>)</h2>
+
+<% if (typeof message !== 'undefined' && message) { %>
+    <p class="message success-message"><%= message %></p>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+    <p class="message error-message"><%= error %></p>
+<% } %>
+
+<% if (allUsersList.length > 0) { %>
+    <div class="table-wrapper" style="overflow-x: auto; margin-top: 20px;">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Email (Username)</th>
+                    <th>Admin Status</th>
+                    <th>Akcije</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% allUsersList.forEach(userFromList => { %>
+                    <tr>
+                        <td><%= userFromList.username %></td>
+                        <td><%= userFromList.is_admin ? 'DA' : 'NE' %></td>
+                        <td>
+                            <a href="/admin/users/<%= userFromList.id %>/votes" class="button-small">Vidi Glasove</a>
+                            <% if (!userFromList.is_admin && userFromList.id !== locals.user.id) { %>
+                                <form action="/admin/users/delete/<%= userFromList.id %>" method="POST" style="display: inline;" onsubmit="return confirm('Jeste li sigurni da želite obrisati korisnika <%= userFromList.username %>?');">
+                                    <button type="submit" class="button-small button-danger">Obriši</button>
+                                </form>
+                            <% } else if (userFromList.id === locals.user.id) { %>
+                                <span>(Vi)</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+<% } else { %>
+    <p style="margin-top: 20px;">Nema registriranih korisnika.</p>
+<% } %>
+
+<p style="margin-top: 30px;">
+    <a href="/admin" class="button">Povratak na Admin Dashboard</a>
+</p>
+
+<%- include('../partials/footer') %>

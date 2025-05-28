@@ -1,0 +1,105 @@
+<%- include('../partials/header', { title: 'Admin Dashboard - EMERUS Kuhinja' }) %>
+
+<h2 class="page-title">Admin Dashboard</h2>
+
+<% if (typeof message !== 'undefined' && message) { %>
+    <p class="message success-message"><%= message %></p>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+    <p class="message error-message"><%= error %></p>
+<% } %>
+
+<div class="admin-dashboard-layout">
+
+  <!-- Statistika -->
+  <section class="admin-panel-card admin-panel-card--statistics">
+    <h3 class="admin-card-title admin-card-title--large">📊 Statistika</h3>
+
+    <% if (detailedVoteCounts) { %>
+      <h4 class="admin-card-subtitle">Odabiri po danima:</h4>
+      <div class="daily-stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+        <% daysOrder.forEach(dayKey => { %>
+            <% const dayStats = detailedVoteCounts[dayKey]; %>
+            <% const dayMenuInfo = weeklyMenu[dayKey] || {}; %>
+            <% if (dayStats) { %>
+                <div class="day-stat-card" style="border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+                    <strong><%= dayStats.dayName %>:</strong><br>
+                    Jelo 1: <span class="admin-votes-grid__count"><%= dayStats.meal1_votes %></span>
+                    <% if (dayStats.meal1_votes > 0) { %>
+                        <a href="/admin/voters/<%= dayKey %>/1" class="admin-votes-grid__view-link">(Vidi tko)</a>
+                    <% } %>
+                    <br>
+                    <% if (dayMenuInfo.has_two_options) { %>
+                        Jelo 2: <span class="admin-votes-grid__count"><%= dayStats.meal2_votes %></span>
+                        <% if (dayStats.meal2_votes > 0) { %>
+                            <a href="/admin/voters/<%= dayKey %>/2" class="admin-votes-grid__view-link">(Vidi tko)</a>
+                        <% } %>
+                    <% } else { %>
+                        <span style="font-size: 0.8em; color: #777;">(Samo Jelo 1 ponuđeno)</span>
+                    <% } %>
+                </div>
+            <% } %>
+        <% }); %>
+      </div>
+      <% 
+        let noVotesAtAll = true;
+        for (const dayKey of daysOrder) {
+            if (detailedVoteCounts && detailedVoteCounts[dayKey] && (detailedVoteCounts[dayKey].meal1_votes > 0 || detailedVoteCounts[dayKey].meal2_votes > 0)) {
+                noVotesAtAll = false;
+                break;
+            }
+        }
+      %>
+      <% if (noVotesAtAll) { %>
+        <p class="admin-info-italic">Nema zabilježenih odabira jela ni za jedan dan.</p>
+      <% } %>
+    <% } else { %>
+      <p class="admin-info-italic">Nema podataka o glasovima po danima.</p>
+    <% } %>
+  </section>
+
+  <!-- Resetiranje Glasova -->
+  <section class="admin-panel-card admin-panel-card--danger-alert">
+    <h3 class="admin-card-title">⚠ Resetiranje Glasanja</h3>
+    <p class="admin-card-text">
+      Ova akcija će <strong>obrisati sve trenutne glasove</strong> korisnika.<br>
+      Koristite ovu opciju <strong>na početku novog tjedna</strong>.
+    </p>
+    <form action="/admin/reset-votes" method="POST" onsubmit="return confirm('Jeste li sigurni da želite resetirati sve glasove? Ova akcija je nepovratna.');">
+      <button type="submit" class="button-reset-all-votes">
+        🔄 Resetiraj sve glasove
+      </button>
+    </form>
+  </section>
+
+  <!-- Upravljanje Jelovnikom -->
+  <section class="admin-panel-card admin-panel-card--default">
+    <h3 class="admin-card-title admin-card-title--medium">🍽 Upravljanje Jelovnikom</h3>
+    <p class="admin-card-text">
+      Ovdje možete uređivati tjedni jelovnik, dodavati ili mijenjati jela za svaki dan.
+    </p>
+    <a href="/admin/menu" class="admin-action-button">
+      Uredi Jelovnik
+    </a>
+  </section>
+
+  <!-- Registrirani Korisnici -->
+  <section class="admin-panel-card admin-panel-card--default">
+    <div class="admin-card-header">
+      <h3 class="admin-card-title admin-card-title--medium">📋 Registrirani Korisnici</h3>
+      <span class="admin-user-count-badge">
+        Ukupno: <strong><%= allUsers.length %></strong>
+      </span>
+    </div>
+
+    <% if (allUsers.length > 0) { %>
+      <a href="/admin/all-users" class="admin-action-button">
+        Prikaži sve registrirane korisnike
+      </a>
+    <% } else { %>
+      <p class="admin-info-italic">Nema registriranih korisnika.</p>
+    <% } %>
+  </section>
+</div>
+
+<%- include('../partials/footer') %>

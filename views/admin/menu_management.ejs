@@ -1,0 +1,75 @@
+<%- include('../partials/header', { title: title }) %>
+
+
+<h2 class="page-title" style="margin-bottom: 25px;"><%= title %></h2>
+
+<% if (message) { %><p class="message success-message" style="text-align: center; max-width: 650px; margin-left: auto; margin-right: auto;"><%= message %></p><% } %>
+<% if (error) { %><p class="message error-message" style="text-align: center; max-width: 650px; margin-left: auto; margin-right: auto;"><%= error %></p><% } %>
+
+
+<div style="text-align: center; margin-bottom: 30px; padding: 20px; background-color: #fef3f3; border: 1px solid #f5c2c7; border-radius: 8px;">
+    <form action="/admin/menu/reset-week" method="POST" onsubmit="return confirm('JESTE LI SIGURNI da želite obrisati (resetirati) SVA jela za cijeli tjedan? Ova akcija je nepovratna!');">
+        <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; transition: background-color 0.3s;">
+            Resetiraj Cijeli Tjedni Jelovnik
+        </button>
+    </form>
+</div>
+
+
+
+<div class="admin-menu-cards-container">
+    <% daysOrder.forEach(dayKey => { %>
+        <% const menuItem = weeklyMenu[dayKey] || { name: (typeof DAY_DISPLAY_NAMES !== 'undefined' && DAY_DISPLAY_NAMES[dayKey] ? DAY_DISPLAY_NAMES[dayKey] : dayKey.charAt(0).toUpperCase() + dayKey.slice(1)), meal_1: "Nije postavljeno", has_two_options: false }; %>
+        
+        
+        <div class="day-card admin-menu-day-card"> 
+            <h3><%= menuItem.name %></h3>
+            <div class="meal-option">
+                <p><strong>1)</strong> <%- menuItem.meal_1 || "<i>Nije definirano</i>" %></p>
+            </div>
+            <% if (menuItem.has_two_options) { %>
+                <div class="meal-option">
+                    <p><strong>2)</strong> <%- menuItem.meal_2 || "<i>Nije definirano</i>" %></p>
+                </div>
+                <% if (menuItem.option_2_prompt) { %>
+                    <p class="choice-prompt" style="font-size: 0.85em;"><em>Prompt: <%= menuItem.option_2_prompt %></em></p>
+                <% } %>
+            <% } else { %>
+                <p style="font-style: italic; color: #777; font-size: 0.9em; margin-top:10px;">(Samo jedna opcija jela za ovaj dan)</p>
+            <% } %>
+            <div style="text-align: center; margin-top: 20px;">
+                 <a href="/admin/menu/edit/<%= dayKey %>" class="button button-small">Uredi <%= menuItem.name %></a>
+            </div>
+        </div>
+    <% }); %>
+</div>
+
+<p style="text-align: center; margin-top: 30px;">
+    <a href="/admin" class="button">Povratak na Admin Dashboard</a>
+</p>
+
+
+<style>
+    
+    .admin-menu-cards-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center; 
+        gap: 20px; 
+        width: 100%;
+    }
+    .admin-menu-day-card { 
+        width: 100%; 
+        max-width: 650px; 
+    }
+    
+    .container > .message.success-message,
+    .container > .message.error-message {
+        max-width: 650px;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: left; 
+    }
+</style>
+
+<%- include('../partials/footer') %>

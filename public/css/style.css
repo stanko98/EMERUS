@@ -1,0 +1,1010 @@
+:root {
+    --primary-color: #267CB9; /* Glavna boja */
+    --primary-color-dark: #267CB9; /* Tamnija nijansa glavne boje za hover */
+    --secondary-color: #f4f4f4; /* Pozadina body */
+    --text-color: #333;
+    --border-color: #ddd; /* Općenita boja obruba */
+    --input-border-color: #ccc; /* Obrub input polja */
+    --input-focus-border-color: var(--primary-color); /* Obrub input polja pri fokusu */
+    --error-color: #D32F2F; /* Crvena za greške */
+    --success-color: #388E3C; /* Zelena za uspjeh */
+    --link-color: var(--primary-color); /* Boja linkova */
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --card-background: #ffffff; /* Pozadina kartica */
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sjena kartica */
+    --border-radius-sm: 4px; /* Mali radijus obruba */
+    --border-radius-md: 8px; /* Srednji radijus obruba */
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; 
+}
+
+.text-center {
+    text-align: center;
+}
+
+.page-description { 
+    text-align: center;
+    margin-bottom: 20px; 
+    color: #555; 
+    font-size: 0.95rem; 
+}
+
+.page-title {
+    text-align: center;
+    margin-bottom: 10px; 
+    font-size: 1.7rem; 
+    color: var(--text-color);
+}
+
+/* Kontejner sekcije */
+.admin-statistics {
+  background-color: #f9fafb;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-top: 20px;
+}
+
+/* Naslov sekcije */
+.admin-statistics h3 {
+  font-size: 1.6em;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1f2937; 
+}
+
+/* Opći tekst */
+.admin-statistics p {
+  font-size: 1em;
+  color: #374151;
+}
+
+/* Istaknuti broj (ukupni glasovi) */
+.admin-statistics .highlight {
+  color: #2563eb; 
+  font-weight: bold;
+}
+
+/* Podnaslov "po danima" */
+.admin-statistics h4 {
+  margin-top: 25px;
+  margin-bottom: 15px;
+  font-size: 1.1em;
+  font-weight: 500;
+  color: #111827;
+}
+
+/* Lista dana */
+.vote-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+/* Kartica za svaki dan */
+.vote-list li {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  transition: transform 0.2s ease;
+}
+
+.vote-list li:hover {
+  transform: scale(1.02);
+}
+
+/* Gumb za glasače */
+.vote-button {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.8em;
+  padding: 4px 8px;
+  background-color: #e0f2fe;
+  color: #0284c7;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.vote-button:hover {
+  background-color: #bae6fd;
+}
+
+/* Prazna poruka */
+.no-votes {
+  margin-top: 15px;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.menu-management-section {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fcfcfc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.menu-management-section h3 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}
+
+.menu-management-section p {
+  margin-bottom: 20px;
+  color: #444;
+}
+
+.button-primary {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  font-size: 15px;
+  border-radius: 4px;
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.3s ease;
+}
+
+.button-primary:hover {
+  background-color: #0056b3;
+}
+
+/* Glavni kontejner za stranice koje NISU login/register */
+.container {
+    width: 90%;
+    max-width: 1000px; 
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--card-background);
+    box-shadow: var(--card-shadow);
+    border-radius: var(--border-radius-md);
+    flex-grow: 1; 
+}
+
+.site-header {
+    background-color: var(--primary-color, #2563eb); 
+    color: white;
+    padding: 0.8rem 1rem; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-content-wrapper {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    flex-wrap: wrap; 
+}
+
+.site-title { 
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+.site-logo-link { 
+    color: white;
+    text-decoration: none;
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+}
+
+.header-logo-img { 
+    height: 40px; 
+    width: auto;   
+    object-fit: cover; 
+}
+
+.logo-text { 
+    font-weight: bold; 
+}
+
+.nav-items-wrapper {
+    display: flex;
+    align-items: center; 
+    gap: 10px; 
+    flex-wrap: wrap; 
+    justify-content: flex-end; 
+}
+
+.nav-welcome-message {
+    margin-right: 10px; 
+    font-size: 0.9rem;
+    white-space: nowrap; 
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    padding: 8px 12px; 
+    border-radius: var(--border-radius-sm, 4px);
+    transition: background-color 0.2s ease;
+    font-size: 0.95rem;
+    display: inline-block; 
+}
+
+.nav-link:hover {
+    background-color: rgba(255,255,255,0.15);
+}
+
+.nav-link.active {
+    background-color: rgba(255,255,255,0.25);
+    font-weight: 600; 
+}
+
+
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem 0;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8rem; 
+}
+
+header nav {
+    margin-top: 0.5rem;
+}
+
+header nav a {
+    color: white;
+    margin: 0 10px;
+    text-decoration: none;
+    padding: 6px 12px; 
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s ease;
+}
+
+header nav a.active {
+    background-color: rgba(255,255,255,0.2);
+}
+
+header nav a:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+header nav span {
+    margin-right: 15px;
+}
+
+/* --- STILOVI ZA AUTH STRANICE (LOGIN/REGISTER) --- */
+.auth-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.guest-view-container { 
+    background-color: transparent; 
+    box-shadow: none; 
+    padding-top: 0; 
+}
+
+.auth-form-container {
+    background-color: var(--card-background);
+    padding: 30px 40px;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--card-shadow);
+    width: 100%;
+    max-width: 400px; 
+    text-align: center;
+}
+
+.auth-form-container h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 1.8rem;
+    color: var(--text-color);
+}
+
+.auth-form { 
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.auth-form div { 
+    margin-bottom: 20px;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.auth-form input[type="text"],
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--input-border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.auth-form input[type="text"]:focus,
+.auth-form input[type="email"]:focus,
+.auth-form input[type="password"]:focus {
+    border-color: var(--input-focus-border-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2); 
+}
+
+.auth-form button[type="submit"] {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out;
+    margin-top: 10px; 
+}
+
+.auth-form button[type="submit"]:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.auth-form-container .auth-switch {
+    margin-top: 25px;
+    font-size: 0.9rem;
+    color: #555;
+}
+.auth-form-container .auth-switch a {
+    color: var(--link-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-form-container .auth-switch a:hover {
+    text-decoration: underline;
+}
+
+/* Poruke unutar auth-form-container */
+.auth-form-container .message {
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.auth-form-container .error-message {
+    background-color: #FFEBEE;
+    color: var(--error-color);
+    border: 1px solid var(--error-color);
+}
+
+.auth-form-container .success-message {
+    background-color: #E8F5E9;
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+
+/* Općenite poruke izvan auth-form-container (ako se koriste, npr. na /dashboard) */
+.container > .message { 
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+}
+
+.container > .error-message { 
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.container > .success-message { 
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+
+/* --- STILOVI ZA USER DASHBOARD --- */
+.meal-form { 
+    display: flex;
+    flex-direction: column; 
+    align-items: center;   
+    gap: 20px;             
+}
+
+.day-card {
+    background-color: var(--card-background);
+    padding: 20px;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    width: 100%; 
+    max-width: 650px; 
+    box-sizing: border-box;
+}
+
+.day-card h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.day-card .meal-option {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: var(--border-radius-sm);
+}
+
+.day-card .meal-option p {
+    margin: 0;
+}
+
+.day-card .meal-option strong {
+    color: #555;
+}
+
+.choice-prompt {
+    font-size: 0.9em;
+    color: #555;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-style: italic;
+}
+
+.choice-selection {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-color);
+}
+
+.checkbox-label-inline {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    cursor: pointer;
+    padding: 8px 0;
+}
+
+.checkbox-label-inline input[type="checkbox"] {
+    margin-right: 8px;
+    width: auto;
+    height: auto;
+    vertical-align: middle;
+}
+
+.default-choice-note {
+    font-style: italic;
+    color: #777;
+    margin-top: 10px;
+    padding: 8px;
+    background-color: #e9e9e9;
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+}
+
+.save-button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+    
+    margin-top: 20px;
+    width: 100%; 
+    max-width: 650px;  
+    align-self: center; 
+}
+
+.save-button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+
+/* === NOVI STILOVI ZA ADMIN DASHBOARD === */
+
+/* Glavni grid kontejner za admin dashboard sekcije */
+.admin-dashboard-layout {
+    display: grid;
+    grid-template-columns: 1fr; 
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+/* Osnovna kartica za admin sekcije */
+.admin-panel-card {
+    padding: 20px;
+    border-radius: 12px; 
+}
+
+/* Specifični stilovi za različite tipove kartica */
+.admin-panel-card--statistics {
+    background-color: #f9fafb; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #e5e7eb; 
+}
+
+.admin-panel-card--default { 
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.admin-panel-card--danger-alert { 
+    background-color: #fdf2f2; 
+    border-left: 5px solid var(--error-color, #d9534f); 
+    border-radius: 8px; 
+}
+.admin-panel-card--danger-alert .admin-card-title,
+.admin-panel-card--danger-alert .admin-card-text {
+    color: #a94442; 
+}
+
+/* Naslovi unutar kartica */
+.admin-card-title {
+    font-size: 1.5em; 
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #1f2937; 
+}
+
+.admin-card-title--large { /* Za "Statistika" */
+    font-size: 1.5em;
+}
+
+.admin-card-title--medium { /* Za ostale naslove sekcija */
+    font-size: 1.2rem;
+}
+
+
+.admin-card-subtitle {
+    margin-top: 25px; 
+    margin-bottom: 15px;
+    font-size: 1.1em;
+    font-weight: 500;
+    color: #111827;
+}
+
+.admin-card-text {
+    margin-bottom: 15px;
+    color: #374151; 
+}
+
+/* Lista za glasove po danima */
+.admin-votes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    padding: 0;
+    list-style-type: none;
+}
+
+.admin-votes-grid__item {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: var(--border-radius-md, 8px);
+    padding: 12px;
+}
+
+.admin-votes-grid__item strong {
+    color: #111827; 
+}
+
+.admin-votes-grid__count {
+    color: #2563eb; 
+    font-weight: bold;
+}
+
+.admin-votes-grid__view-link { /* Za link "Vidi glasače" */
+    display: inline-block; 
+    margin-top: 8px;
+    font-size: 0.8em;
+    padding: 4px 8px;
+    background-color: #e0f2fe; 
+    color: #0284c7; 
+    border-radius: var(--border-radius-sm, 4px);
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+.admin-votes-grid__view-link:hover {
+    background-color: #bae6fd;
+}
+
+/* Italic tekst za napomene */
+.admin-info-italic {
+    margin-top: 15px;
+    font-style: italic;
+    color: #6b7280;
+}
+
+/* Gumb za resetiranje glasova */
+.button-reset-all-votes {
+    background-color: var(--error-color, #d9534f);
+    border: none;
+    color: white;
+    padding: 10px 16px;
+    font-size: 1rem; 
+    cursor: pointer;
+    border-radius: var(--border-radius-sm, 6px);
+    transition: background-color 0.2s ease;
+}
+.button-reset-all-votes:hover {
+    background-color: #c9302c; 
+}
+
+/* Primarni akcijski gumbi/linkovi na admin dashboardu */
+.admin-action-button { /* Za "Uredi Jelovnik", "Prikaži sve..." */
+    display: inline-block;
+    background-color: var(--primary-color, #2563eb); 
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: var(--border-radius-md, 8px);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.admin-action-button:hover {
+    background-color: var(--primary-color-dark, #1d4ed8); 
+}
+
+/* Grupiranje naslova sekcije i badge-a (npr. za Registrirane korisnike) */
+.admin-card-header {
+    display: flex;
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 8px; 
+    margin-bottom: 16px;
+}
+
+.admin-card-header .admin-card-title {
+    margin-bottom: 0; 
+}
+
+.admin-user-count-badge {
+    font-size: 0.875rem;
+    color: #4b5563;
+    background-color: #f3f4f6; 
+    padding: 6px 12px;
+    border-radius: 999px; 
+    display: inline-block;
+}
+
+.buttoni {
+    display: inline-block; 
+    padding: 10px 20px; 
+    font-size: 1rem; 
+    font-weight: 600; 
+    text-align: center;
+    text-decoration: none; 
+    color: #ffffff; 
+    background-color: var(--primary-color, #4CAF50); 
+    border: none; 
+    border-radius: var(--border-radius-sm, 4px); 
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+}
+
+.buttoni:hover {
+    background-color: var(--primary-color-dark, #388E3C); 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.buttoni:active { 
+    transform: translateY(1px); 
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Specifična klasa za "Odustani" ili sekundarne akcije */
+.buttoni-secondary { 
+    background-color: #6c757d; 
+}
+
+.buttoni-secondary:hover {
+    background-color: #5a6268; 
+}
+
+/* Kontejner za akcijske gumbe na formama */
+.form-actions {
+    margin-top: 25px; 
+    display: flex; 
+    justify-content: flex-start; 
+    gap: 10px; 
+    flex-wrap: wrap; 
+}
+
+/* --- STILOVI ZA ADMIN DASHBOARD --- */
+/*
+.admin-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-top: 20px;
+}
+.admin-section.card {
+    background-color: var(--card-background);
+    padding: 25px;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--card-shadow);
+    width: 100%;
+    box-sizing: border-box;
+}
+.admin-section h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+.admin-section p {
+    margin-bottom: 10px;
+}
+    */
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+
+.users-table th, .users-table td {
+    border: 1px solid var(--border-color);
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.users-table th {
+    background-color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.button-small {
+    font-size: 0.85em;
+    padding: 6px 10px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    display: inline-block;
+    text-decoration: none;
+    color: white;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.button-small:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.button-danger { 
+    background-color: var(--error-color);
+}
+
+.button-danger:hover {
+    background-color: #b71c1c;
+}
+
+.votes-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.votes-table th, .votes-table td {
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    text-align: left;
+}
+
+.votes-table th {
+    background-color: #f2f2f2;
+}
+
+/* Error page specifični stilovi */
+
+.error-container {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.error-container h1 {
+    font-size: 2.5rem;
+    color: var(--error-color);
+    margin-bottom: 15px;
+}
+
+.error-container p {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+}
+
+.error-container .button {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s ease;
+}
+
+.error-container .button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+footer {
+    text-align: center;
+    padding: 20px 0;
+    background-color: #333;
+    color: #f1f1f1;
+    font-size: 0.9rem;
+    width: 100%;
+    margin-top: auto;
+}
+
+
+/* --- MEDIA QUERIES ZA RESPONSIVNOST --- */
+@media (max-width: 768px) { /* Tableti i veći mobiteli */
+    .header-content-wrapper {
+        flex-direction: column; 
+        align-items: center;   
+        gap: 10px;
+    }
+
+    .site-title {
+        margin-bottom: 5px;
+        text-align: center; 
+    }
+
+    .site-logo-link { 
+        justify-content: center; 
+    }
+
+    .main-navigation { 
+        width: 100%; 
+        display: flex; 
+        justify-content: center; 
+    }
+
+    .nav-items-wrapper {
+        flex-direction: column; 
+        align-items: center;   
+        width: auto; 
+        max-width: 90%; 
+        gap: 8px; 
+    }
+
+    .nav-link {
+        display: block; 
+        width: 100%; 
+        min-width: 180px; 
+        box-sizing: border-box;
+        text-align: center;
+        margin-bottom: 5px; 
+    }
+    
+    .nav-welcome-message {
+        margin-right: 0;
+        margin-bottom: 10px; 
+        text-align: center;
+        width: 100%; 
+        order: -1; 
+    }
+}
+
+@media (max-width: 480px) { /* Manji mobiteli */
+    .site-header {
+        padding: 0.6rem 0.8rem;
+    }
+    .site-title {
+        font-size: 1.4rem;
+    }
+    .header-logo-img {
+        height: 30px; 
+    }
+    .nav-link {
+        font-size: 0.9rem;
+        padding: 10px 12px; 
+    }
+    .nav-welcome-message {
+        font-size: 0.85rem;
+    }
+}
+
+
+@media (max-width: 480px) { /* Manji mobiteli */
+    header h1 {
+        font-size: 1.4rem;
+    }
+    header nav a {
+        padding: 5px 8px;
+        font-size: 0.9rem;
+    }
+    .auth-form-container {
+        padding: 25px 20px;
+    }
+    .auth-form-container h2 {
+        font-size: 1.6rem;
+    }
+    .auth-form input[type="text"],
+    .auth-form input[type="email"],
+    .auth-form input[type="password"],
+    .auth-form button[type="submit"] {
+        font-size: 0.95rem;
+        padding: 10px 12px;
+    }
+    .day-card {
+        padding: 15px;
+    }
+    .day-card h3 {
+        font-size: 1.1rem;
+    }
+    .admin-section.card {
+        padding: 20px 15px;
+    }
+    .admin-section h3 {
+        font-size: 1.2rem;
+    }
+    .users-table th, .users-table td {
+        font-size: 0.8rem;
+        padding: 6px 8px;
+    }
+    .button-small {
+        font-size: 0.8em;
+        padding: 5px 8px;
+    }
+    .error-container h1 {
+        font-size: 2rem;
+    }
+    .error-container p {
+        font-size: 1rem;
+    }
+}

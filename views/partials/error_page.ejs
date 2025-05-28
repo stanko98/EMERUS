@@ -1,0 +1,12 @@
+<%- include('header') %>
+<div class="container error-container" style="text-align: center; padding: 40px;">
+    <h1>Greška <%= statusCode %></h1>
+    <p><%= message %></p>
+    <a href="/" class="button">Povratak na početnu</a>
+    <% if (user && user.is_admin) { %>
+        <a href="/admin" class="button">Admin Dashboard</a>
+    <% } else if (user) { %>
+         <a href="/dashboard" class="button">Menu</a>
+    <% } %>
+</div>
+<%- include('footer') %>

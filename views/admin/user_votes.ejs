@@ -1,0 +1,34 @@
+<%- include('../partials/header', { title: title }) %>
+
+<h2><%= title %></h2>
+
+<% if (choices && choices.length > 0) { %>
+    <p>Pregled odabira za korisnika <strong><%= userName %></strong>:</p>
+    <table class="votes-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr>
+                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Dan</th>
+                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Odabrano Jelo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% choices.forEach(choiceDetail => { %>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;"><%= choiceDetail.dayName %></td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">
+                        <%= choiceDetail.chosenMealDescription %>
+                    </td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+<% } else { %>
+    <p>Korisnik <strong><%= userName %></strong> nema zabilježenih odabira.</p>
+<% } %>
+
+<p style="margin-top: 30px;">
+    <a href="/admin/all-users" class="button">Povratak na Popis Korisnika</a>
+    <a href="/admin" class="button" style="margin-left: 10px;">Admin Dashboard</a>
+</p>
+
+<%- include('../partials/footer') %>

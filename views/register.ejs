@@ -1,0 +1,36 @@
+<%- include('partials/header', { title: 'Registracija - EMERUS Kuhinja' }) %>
+
+<div class="auth-page-wrapper">
+    <div class="auth-form-container">
+        <h2>Registracija</h2>
+
+        <% if (error) { %>
+            <p class="message error-message"><%= error %></p>
+        <% } %>
+        <% /* Uspješna poruka se sada prikazuje na login stranici nakon preusmjeravanja */ %>
+        <% /* Ako i dalje želite poruku o uspjehu ovdje, možete je vratiti: */ %>
+        <% /* if (success) { %>
+            <p class="message success-message"><%= success %></p>
+        <% } */ %>
+
+
+        <form action="/register" method="POST" class="auth-form">
+            <div>
+                <label for="username">Email:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div>
+                <label for="password">Lozinka:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div>
+                <label for="confirm_password">Potvrdite lozinku:</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+            </div>
+            <button type="submit">Registrirajte se</button>
+        </form>
+        <p class="auth-switch">Već imate korisnički račun? <a href="/login">Prijavite se!</a></p>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

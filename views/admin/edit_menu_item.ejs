@@ -1,0 +1,80 @@
+<%# meal-planner/views/admin/edit_menu_item.ejs %>
+<%- include('../partials/header', { title: title }) %>
+
+<h2><%= title %></h2>
+
+<% if (typeof error !== 'undefined' && error) { %><p class="message error-message"><%= error %></p><% } %>
+
+<form action="/admin/menu/edit/<%= dayKey %>" method="POST" class="styled-form" style="max-width: 700px; margin: 20px auto; padding:20px; background: #fff; border-radius: var(--border-radius-md); box-shadow: var(--card-shadow);">
+    
+    <div class="form-group">
+        <label for="day_name_display">Naziv Dana (za prikaz):</label>
+        <input type="text" id="day_name_display" name="day_name_display" value="<%= dayMenu.day_name_display %>" required>
+    </div>
+
+    <div class="form-group">
+        <label for="meal_1_description">Opis Jela 1 (obavezno):</label>
+        <textarea id="meal_1_description" name="meal_1_description" rows="3" required><%= dayMenu.meal_1_description %></textarea>
+    </div>
+
+    <div class="form-group checkbox-group" style="flex-direction: row; align-items: center;">
+        <input type="checkbox" id="has_two_options" name="has_two_options" <%= dayMenu.has_two_options ? 'checked' : '' %> onchange="toggleMeal2Fields()">
+        <label for="has_two_options" style="margin-bottom: 0; margin-left: 8px;">Ponudi drugo jelo (Jelo 2)?</label>
+    </div>
+
+    <div id="meal2-fields" style="display: none;">
+        <div class="form-group">
+            <label for="meal_2_description">Opis Jela 2 (obavezno):</label>
+            <textarea id="meal_2_description" name="meal_2_description" rows="3"><%= dayMenu.meal_2_description || '' %></textarea>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="buttoni">Spremi Izmjene</button>
+        <a href="/admin/menu" class="buttoni buttoni-secondary">Odustani</a> 
+    </div>
+</form>
+
+<script>
+    function toggleMeal2Fields() {
+        const checkbox = document.getElementById('has_two_options');
+        const meal2FieldsDiv = document.getElementById('meal2-fields');
+        
+        if (checkbox.checked) {
+            meal2FieldsDiv.style.display = 'block';
+        } else {
+            meal2FieldsDiv.style.display = 'none';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', toggleMeal2Fields);
+</script>
+
+<style>
+    
+    .styled-form .form-group {
+        margin-bottom: 15px;
+    }
+
+    .styled-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    .styled-form input[type="text"],
+    .styled-form textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc; 
+        border-radius: var(--border-radius-sm, 4px); 
+        box-sizing: border-box;
+        font-size: 1rem;
+    }
+
+    .styled-form textarea {
+        min-height: 80px;
+    }
+
+</style>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,50 @@
+<%# meal-planner/views/guest_menu.ejs %>
+<%- include('partials/header', { title: 'Tjedni Menu - Emerus Kuhinja' }) %>
+
+<div class="guest-menu-info" style="text-align: center; margin-bottom: 25px; padding: 15px; background-color: #eef; border-radius: var(--border-radius-md);">
+    <p style="font-size: 1.1em; color: #333;">
+        Molimo <a href="/login" style="color: var(--link-color); font-weight: bold; text-decoration: underline;">prijavite se</a> kako biste izabrali željene obroke za ovaj tjedan.
+    </p>
+</div>
+
+<h2 class="page-title">Popis jela kroz tjedan:</h2>
+
+<div class="meal-display"> 
+    <% daysOrder.forEach(dayKey => { %>
+        <% const menuItem = weeklyMenu[dayKey]; %>
+        <% if (menuItem) { %>
+            <div class="day-card guest-day-card"> 
+                <h3><%= menuItem.name %></h3>
+                
+                <div class="meal-option">
+                    <p><strong>1)</strong> <%= menuItem.meal_1 %></p>
+                </div>
+
+                <% if (menuItem.has_two_options) { %>
+                    <div class="meal-option">
+                        <p><strong>2)</strong> <%= menuItem.meal_2 %></p>
+                    </div>
+                    <% if (menuItem.option_2_prompt) { %>
+                    <% } %>
+                <% } %>
+            </div>
+        <% } %>
+    <% }); %>
+</div>
+
+<%- include('partials/footer') %>
+
+<style>
+    
+    .meal-display {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .guest-menu-info p a:hover {
+        text-decoration: none; 
+        color: var(--primary-color-dark);
+    }
+</style>

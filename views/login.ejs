@@ -1,0 +1,29 @@
+<%- include('partials/header', { title: 'Prijava - EMERUS Kuhinja' }) %>
+
+<div class="auth-page-wrapper">
+    <div class="auth-form-container">
+        <h2>Prijava</h2>
+
+        <% if (error) { %>
+            <p class="message error-message"><%= error %></p>
+        <% } %>
+        <% if (message) { %>
+            <p class="message success-message"><%= message %></p>
+        <% } %>
+
+        <form action="/login" method="POST" class="auth-form">
+            <div>
+                <label for="username">Email:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div>
+                <label for="password">Lozinka:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Prijavite se</button>
+        </form>
+        <p class="auth-switch">Nemate korisnički račun? <a href="/register">Registrirajte se!</a></p>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

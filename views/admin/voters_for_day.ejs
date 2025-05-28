@@ -1,0 +1,20 @@
+<%- include('../partials/header', { title: title }) %>
+
+<h2><%= title %></h2> 
+
+<% if (voters && voters.length > 0) { %>
+    <p>Popis korisnika koji su odabrali <strong>Jelo <%= optionNumber %></strong> za dan <strong><%= dayName %></strong>:</p>
+    <ul class="voters-list" style="list-style-type: decimal; padding-left: 20px;">
+        <% voters.forEach(username => { %>
+            <li style="margin-bottom: 5px;"><%= username %></li>
+        <% }); %>
+    </ul>
+<% } else { %>
+    <p>Nema korisnika koji su odabrali <strong>Jelo <%= optionNumber %></strong> za dan <strong><%= dayName %></strong>.</p>
+<% } %>
+
+<p style="margin-top: 30px;">
+    <a href="/admin" class="button">Povratak na Admin Dashboard</a>
+</p>
+
+<%- include('../partials/footer') %>
