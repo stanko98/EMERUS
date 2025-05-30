@@ -4,13 +4,10 @@ const { isAuthenticated } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 router.get('/dashboard', isAuthenticated, async (req, res) => {
-    console.log('[GET /dashboard] Ulaz u rutu.');
     try {
         const userId = req.session.user.id;
-        console.log(`[GET /dashboard] Pristupa korisnik ID: ${userId}, Admin status: ${req.session.user.is_admin}`);
 
         const userChoices = await getUserDailyChoices(userId); 
-        console.log('[GET /dashboard] Korisnički odabiri:', userChoices);
 
         res.render('dashboard', {
             userChoices, 
@@ -28,13 +25,11 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
 });
 
 router.post('/dashboard', isAuthenticated, async (req, res) => {
-    console.log('[POST /dashboard] Ulaz u rutu.');
     const userId = req.session.user.id;
     const choicesFromForm = req.body.choices || {}; 
     
 
     try {
-        console.log('[POST /dashboard] Spremanje odabira:', choicesFromForm);
         for (const dayKey of res.locals.daysOrder) {
             const chosenOptionForDay = choicesFromForm[dayKey]; 
             await saveUserDailyChoice(userId, dayKey, chosenOptionForDay);

@@ -22,14 +22,12 @@ router.use(isAdmin);
 
 // GLAVNA ADMIN DASHBOARD RUTA
 router.get('/', async (req, res) => {
-    console.log('[GET /admin/] Ulaz u glavnu admin dashboard rutu.');
     try {
         const totalUsers = await getTotalUsersCount();
         const totalOverallChoices = await getTotalOverallChoicesCount();
         const allUsers = await getAllUsers();
         const detailedVoteCounts = await getVoteCountsByDayAndOption();
 
-        console.log('[GET /admin/] Statistika dohvaćena.');
         
         res.render('admin/dashboard', {
             title: 'Admin Dashboard',
@@ -53,7 +51,6 @@ router.get('/', async (req, res) => {
 
 // RUTA ZA PRIKAZ SVIH REGISTRIRANIH KORISNIKA
 router.get('/all-users', async (req, res) => {
-    console.log('[GET /admin/all-users] Prikaz stranice sa svim registriranim korisnicima.');
     try {
         const allUsers = await getAllUsers();
         res.render('admin/all_users_list', {
@@ -74,7 +71,6 @@ router.get('/all-users', async (req, res) => {
 
 // RUTA ZA BRISANJE KORISNIKA
 router.post('/users/delete/:userId', async (req, res) => {
-    console.log(`[POST /admin/users/delete/${req.params.userId}] Pokušaj brisanja korisnika.`);
     const userIdToDelete = parseInt(req.params.userId);
     const currentAdminId = req.session.user.id;
 
@@ -96,7 +92,6 @@ router.post('/users/delete/:userId', async (req, res) => {
 
 // RUTA ZA PRIKAZ ODABIRA POJEDINOG KORISNIKA
 router.get('/users/:userId/votes', async (req, res) => {
-    console.log(`[GET /admin/users/${req.params.userId}/votes] Dohvaćanje glasova.`);
     try {
         const userId = parseInt(req.params.userId);
         const user = await findUserById(userId);
@@ -144,7 +139,6 @@ router.get('/users/:userId/votes', async (req, res) => {
 
 // RUTA ZA RESETIRANJE SVIH GLASOVA
 router.post('/reset-votes', async (req, res) => {
-    console.log('[POST /admin/reset-votes] Resetiranje glasova.');
     try {
         await resetAllVotes();
         res.redirect('/admin?message=' + encodeURIComponent('Svi glasovi su uspješno resetirani.'));
@@ -157,7 +151,6 @@ router.post('/reset-votes', async (req, res) => {
 
 // --- RUTE ZA UPRAVLJANJE JELOVNIKOM ---
 router.get('/menu', async (req, res) => {
-    console.log('[GET /admin/menu] Prikaz stranice za upravljanje jelovnikom.');
     try {
         res.render('admin/menu_management', {
             title: 'Upravljanje Tjednim Jelovnikom',
@@ -171,7 +164,6 @@ router.get('/menu', async (req, res) => {
 });
 
 router.get('/menu/edit/:dayKey', async (req, res) => {
-    console.log(`[GET /admin/menu/edit/${req.params.dayKey}] Prikaz forme za uređivanje.`);
     try {
         const { dayKey } = req.params;
         if (!DAYS_OF_WEEK_ORDER.includes(dayKey)) {
@@ -198,7 +190,6 @@ router.get('/menu/edit/:dayKey', async (req, res) => {
 });
 
 router.post('/menu/edit/:dayKey', async (req, res) => {
-    console.log(`[POST /admin/menu/edit/${req.params.dayKey}] Spremanje izmjena.`);
     try {
         const { dayKey } = req.params;
         const {
@@ -227,7 +218,6 @@ router.post('/menu/edit/:dayKey', async (req, res) => {
 });
 
 router.post('/menu/reset-week', async (req, res) => {
-    console.log('[POST /admin/menu/reset-week] Pokušaj resetiranja tjednog jelovnika.');
     try {
         await clearWeeklyMenu();
         res.redirect('/admin/menu?message=' + encodeURIComponent('Cijeli tjedni jelovnik je uspješno resetiran na prazno.'));
@@ -249,7 +239,6 @@ router.get('/voters/:dayKey/:optionNumber', async (req, res) => {
         dayNameDisplay = DAY_DISPLAY_NAMES[dayKey];
     }
 
-    console.log(`[GET /admin/voters/${dayKey}/${optionNumber}] Dohvaćanje glasača za ${dayNameDisplay}, Jelo ${optionNumber}.`);
     try {
         if (!DAYS_OF_WEEK_ORDER.includes(dayKey) || (optionNumInt !== 1 && optionNumInt !== 2)) {
             return res.status(400).render('partials/error_page', { statusCode: 400, message: 'Neispravan dan ili opcija jela.', title: 'Neispravan zahtjev'});

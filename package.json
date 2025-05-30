@@ -11,12 +11,11 @@
   "description": "",
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "body-parser": "^2.2.0",
-    "connect-sqlite3": "^0.9.15",
+    "connect-pg-simple": "^10.0.0",
     "dotenv": "^16.5.0",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
-    "sqlite3": "^5.1.7"
+    "pg": "^8.16.0"
   }
 }
