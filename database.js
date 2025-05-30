@@ -8,6 +8,14 @@ const DAY_DISPLAY_NAMES = {
     thursday: "ČETVRTAK", friday: "PETAK"
 };
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL, 
+    ssl: isProduction ? { rejectUnauthorized: false } : false 
+});
+
+/*
 // Konfiguracija PostgreSQL konekcije
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -18,11 +26,14 @@ const pool = new Pool({
     // Možete dodati i druge opcije, npr. SSL za cloud baze:
     // ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
+*/
 
 // Funkcija za provjeru konekcije i inicijalizaciju tablica
 async function initializeDatabase() {
+    const client = await pool.connect(); 
+    console.log('Attempting to connect and initialize database...');
+    
     try {
-        const client = await pool.connect();
         console.log('Successfully connected to the PostgreSQL database.');
 
         await client.query(`
@@ -58,22 +69,51 @@ async function initializeDatabase() {
         `);
         console.log('Table "daily_menus" checked/created.');
 
-
-        await initializeDefaultDailyMenus(client); 
-
-        client.release(); 
-        console.log('Database initialization complete.');
+        await initializeDefaultDailyMenus(client);
+        console.log('Database tables checked/created and default data initialized.');
 
     } catch (err) {
         console.error('Error during database initialization:', err.stack);
         
-        process.exit(1); 
+        throw err; 
+        
+    } finally {
+        if (client) { 
+            client.release();
+            console.log('Database client released after initialization process.');
+        }
     }
 }
 
-initializeDatabase();
+(async () => {
+    try {
+        console.log("Starting database initialization from module root...");
+        await initializeDatabase();
+        console.log("Database initialization process completed successfully from module root.");
+    } catch (error) {
+        console.error("CRITICAL: Failed to initialize database from module root:", error);
+        
+        process.exit(1);
+    }
+})();
 
+async function initializeDefaultDailyMenus(dbClient) { 
+    const { rows } = await dbClient.query("SELECT COUNT(*) as count FROM daily_menus");
+    if (parseInt(rows[0].count) === 0) {
+        console.log("[DB Init] Initializing daily_menus table with default days...");
+        for (const dayKey of DAYS_OF_WEEK_ORDER) {
+            await dbClient.query(
+                "INSERT INTO daily_menus (day_key, day_name_display, meal_1_description, has_two_options, meal_2_description, option_2_prompt) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (day_key) DO NOTHING",
+                [dayKey, DAY_DISPLAY_NAMES[dayKey] || dayKey.toUpperCase(), "", false, "", ""]
+            );
+        }
+        console.log("[DB Init] daily_menus table initialized with default days.");
+    } else {
+        console.log("[DB Init] daily_menus table already contains data, skipping default initialization.");
+    }
+}
 
+/*
 async function initializeDefaultDailyMenus(dbClient) { 
     const { rows } = await dbClient.query("SELECT COUNT(*) as count FROM daily_menus");
     if (parseInt(rows[0].count) === 0) {
@@ -88,7 +128,7 @@ async function initializeDefaultDailyMenus(dbClient) {
         console.log("[DB Init] daily_menus table initialized with default days.");
     }
 }
-
+*/
 // --- USER FUNCTIONS ---
 async function addUser(username, password) {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -321,5 +361,6 @@ module.exports = {
     resetAllVotes, getTotalUsersCount, getTotalOverallChoicesCount,
     getVoteCountsByDayAndOption, getUsersWhoChoseOptionOnDay,
     getMenuDataFromDB, getSingleDayMenuFromDB, upsertDailyMenu,
-    clearDailyMenu, clearWeeklyMenu
+    clearDailyMenu, clearWeeklyMenu,
+    pool 
 };

@@ -18,6 +18,15 @@ const { getMenuDataFromDB } = require('./database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+
+const sessionPool = new Pool({
+    connectionString: process.env.DATABASE_URL, 
+    ssl: isProduction ? { rejectUnauthorized: false } : false 
+});
+
+/*
 const sessionPool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -26,6 +35,7 @@ const sessionPool = new Pool({
     port: parseInt(process.env.DB_PORT || "5432"),
     // ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false, // Za produkcijske SSL konekcije
 });
+*/
 
 // Osnovni Middleware
 app.use(express.urlencoded({ extended: true }));
@@ -39,11 +49,12 @@ app.use(session({
         tableName: 'user_sessions',       
         createTableIfMissing: true,     
     }),
-    secret: process.env.SESSION_SECRET || 'fallback_secret_for_pg_sessions_dev_only',
+    secret: process.env.SESSION_SECRET || 'fallback_secret_for_dev_only_change_in_prod',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: isProduction, 
+        
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000 
     }
@@ -99,7 +110,7 @@ app.use('/admin', adminRoutes);
 // Osnovno rukovanje greškama
 app.use((err, req, res, next) => {
     console.error("Global Error Handler:", err.message);
-    if (process.env.NODE_ENV !== 'production' && err.stack) {
+    if (!isProduction && err.stack) { 
         console.error(err.stack);
     }
     res.status(err.status || 500).render('partials/error_page', {
@@ -120,5 +131,10 @@ app.use((req, res, next) => {
 
 // Pokretanje servera
 app.listen(PORT, () => {
-    console.log(`Server je pokrenut i sluša na http://localhost:${PORT}`);
+    if (isProduction) {
+        console.log(`Server je pokrenut i sluša na portu ${PORT}`);
+    } else {
+        console.log(`Server je pokrenut i sluša na http://localhost:${PORT}`);
+    }
+    
 });
