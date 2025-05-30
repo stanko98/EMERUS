@@ -1,5 +1,5 @@
-require('dotenv').config(); // Osigurajte da je na vrhu ako koristite .env za DB konekciju
-const { Pool } = require('pg'); // Import Pool iz pg paketa
+require('dotenv').config(); 
+const { Pool } = require('pg'); 
 const bcrypt = require('bcrypt');
 const { DAYS_OF_WEEK_ORDER } = require('./config/menu');
 
@@ -25,8 +25,6 @@ async function initializeDatabase() {
         const client = await pool.connect();
         console.log('Successfully connected to the PostgreSQL database.');
 
-        // Kreiranje tablica ako ne postoje
-        // Sintaksa za PostgreSQL je malo drugačija (npr. SERIAL za auto-increment, BOOLEAN tip postoji)
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
@@ -60,31 +58,28 @@ async function initializeDatabase() {
         `);
         console.log('Table "daily_menus" checked/created.');
 
-        // Prikaz (VIEW) se kreira slično, ali provjerite sintaksu ako je potreban
-        // CREATE OR REPLACE VIEW view_user_meal_choices_with_username AS ... (ako je potreban)
 
-        await initializeDefaultDailyMenus(client); // Proslijedi klijenta
+        await initializeDefaultDailyMenus(client); 
 
-        client.release(); // Otpusti klijenta natrag u pool
+        client.release(); 
         console.log('Database initialization complete.');
 
     } catch (err) {
         console.error('Error during database initialization:', err.stack);
-        // Preporučljivo je da aplikacija ne nastavi s radom ako baza nije inicijalizirana
+        
         process.exit(1); 
     }
 }
 
-// Pozovi inicijalizaciju baze odmah pri učitavanju modula
 initializeDatabase();
 
 
-async function initializeDefaultDailyMenus(dbClient) { // Prima klijenta kao argument
+async function initializeDefaultDailyMenus(dbClient) { 
     const { rows } = await dbClient.query("SELECT COUNT(*) as count FROM daily_menus");
     if (parseInt(rows[0].count) === 0) {
         console.log("[DB Init] Initializing daily_menus table with default days...");
         for (const dayKey of DAYS_OF_WEEK_ORDER) {
-            // Koristi $1, $2... za parametrizirane upite u pg
+            
             await dbClient.query(
                 "INSERT INTO daily_menus (day_key, day_name_display, meal_1_description, has_two_options, meal_2_description, option_2_prompt) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (day_key) DO NOTHING",
                 [dayKey, DAY_DISPLAY_NAMES[dayKey] || dayKey.toUpperCase(), "", false, "", ""]
@@ -94,16 +89,16 @@ async function initializeDefaultDailyMenus(dbClient) { // Prima klijenta kao arg
     }
 }
 
-// --- USER FUNCTIONS (AŽURIRANE ZA pg) ---
+// --- USER FUNCTIONS ---
 async function addUser(username, password) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = "INSERT INTO users (username, password, is_admin) VALUES ($1, $2, FALSE) RETURNING id, username, is_admin";
     try {
         const { rows } = await pool.query(sql, [username, hashedPassword]);
-        return rows[0]; // Vraća novokreiranog korisnika
+        return rows[0];
     } catch (err) {
         console.error('Error in addUser:', err.message);
-        throw err; // Proslijedi grešku dalje
+        throw err; 
     }
 }
 
@@ -111,18 +106,18 @@ async function findUserByUsername(username) {
     const sql = "SELECT * FROM users WHERE username = $1";
     try {
         const { rows } = await pool.query(sql, [username]);
-        return rows[0]; // Vraća korisnika ili undefined
+        return rows[0]; 
     } catch (err) {
         console.error('Error in findUserByUsername:', err.message);
         throw err;
     }
 }
 
-async function verifyPassword(plainPassword, hashedPassword) { // Ostaje ista (bcrypt)
+async function verifyPassword(plainPassword, hashedPassword) { 
     return bcrypt.compare(plainPassword, hashedPassword);
 }
 
-// --- MEAL CHOICE FUNCTIONS (AŽURIRANE ZA pg) ---
+// --- MEAL CHOICE FUNCTIONS ---
 async function saveUserDailyChoice(userId, dayKey, chosenOption) {
     const option = parseInt(chosenOption);
     try {
@@ -133,7 +128,7 @@ async function saveUserDailyChoice(userId, dayKey, chosenOption) {
                 ON CONFLICT(user_id, day_key) DO UPDATE SET chosen_option = EXCLUDED.chosen_option;
             `;
             const result = await pool.query(sql, [userId, dayKey, option]);
-            return { changes: result.rowCount }; // rowCount je ekvivalent this.changes u sqlite3
+            return { changes: result.rowCount }; 
         } else {
             const sql = `DELETE FROM user_daily_choices WHERE user_id = $1 AND day_key = $2;`;
             const result = await pool.query(sql, [userId, dayKey]);
@@ -158,7 +153,7 @@ async function getUserDailyChoices(userId) {
     }
 }
 
-// --- ADMIN FUNCTIONS (AŽURIRANE ZA pg) ---
+// --- ADMIN FUNCTIONS ---
 async function getAllUsers() {
     const sql = "SELECT id, username, is_admin FROM users ORDER BY username ASC";
     try {
@@ -250,7 +245,7 @@ async function getUsersWhoChoseOptionOnDay(dayKey, optionNumber) {
     } catch (err) { console.error('Error in getUsersWhoChoseOptionOnDay:', err.message); throw err; }
 }
 
-// --- MENU MANAGEMENT FUNCTIONS (AŽURIRANE ZA pg) ---
+// --- MENU MANAGEMENT FUNCTIONS ---
 async function getMenuDataFromDB() {
     const sql = "SELECT * FROM daily_menus ORDER BY CASE day_key WHEN 'monday' THEN 1 WHEN 'tuesday' THEN 2 WHEN 'wednesday' THEN 3 WHEN 'thursday' THEN 4 WHEN 'friday' THEN 5 ELSE 6 END";
     try {
@@ -318,7 +313,7 @@ async function clearWeeklyMenu() {
 }
 
 module.exports = {
-    // pool, // Možete eksportirati pool ako vam treba direktan pristup, ali bolje je preko funkcija
+    
     DAY_DISPLAY_NAMES,
     addUser, findUserByUsername, verifyPassword,
     saveUserDailyChoice, getUserDailyChoices,
