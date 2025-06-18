@@ -1,103 +1,171 @@
-<%- include('partials/header', { title: 'Moj Tjedni Plan - EMERUS Kuhinja' }) %>
+<%- include('partials/header', { title: 'Moj Tjedni Plan - Emerus Kuhinja' }) %>
 
-<h2 class="page-title">Popis jela kroz tjedan:</h2>
-<p class="page-description">Odaberite željeno jelo za svaki dan. Ako ne označite nijednu opciju, smatrat će se da niste odabrali jelo za taj dan.</p>
+<h2 class="page-title">Popis jela za tjedan (<%= currentWeekDisplay %>):</h2>
 
-<% if (message) { %>
-    <p class="message <%= (typeof error !== 'undefined' && error) ? 'error-message' : 'success-message' %>"><%= message %></p>
+<!-- Navigacija kroz tjedne -->
+<div class="week-navigation" style="margin: 20px 0; display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border-color, #eee);">
+    <% if (prevWeekLink) { %><a href="<%= prevWeekLink %>" class="button button-small">« Prethodni tjedan</a><% } else { %><span style="visibility: hidden;"><a class="button button-small">« Prethodni tjedan</a></span><% } %>
+    <span style="font-weight: bold; color: var(--text-color, #333);">Odabir Tjedna</span>
+    <% if (nextWeekLink) { %><a href="<%= nextWeekLink %>" class="button button-small">Sljedeći tjedan »</a><% } else { %><span style="visibility: hidden;"><a class="button button-small">Sljedeći tjedan »</a></span><% } %>
+</div>
+
+<!--OPISNE PORUKE NA VRHU -->
+<% if (isCurrentWeek) { %>
+    <% if (isMenuPublished) { %>
+        <p class="page-description">Odaberite željeno jelo za svaki dan...</p>
+    <% } else { %>
+        <p class="page-description" style="color: #e67e22; font-weight:bold;">Jelovnik za tekući tjedan još nije službeno objavljen.</p>
+    <% } %>
+<% } else if (isFutureWeek) { %>
+    <p class="page-description">Jelovnik za ovaj tjedan još nije objavljen.</p>
+<% } else { // Prošli tjedan %>
+    <% if (isMenuPublished) { %>
+        <p class="page-description">Prikaz vaših odabira i službeno objavljenog jelovnika za odabrani prošli tjedan.</p>
+    <% } else { %>
+        <p class="page-description" style="color: #777;">Nema podataka o službeno objavljenom jelovniku za ovaj prošli tjedan. Prikazani su samo vaši prethodni odabiri (ako postoje).</p>
+    <% } %>
 <% } %>
 
-<form action="/dashboard" method="POST" class="meal-form">
-    <% daysOrder.forEach(dayKey => { %>
-        <% const menuItem = weeklyMenu[dayKey]; %>
-        <% if (menuItem) { %>
-            <div class="day-card">
-                <h3><%= menuItem.name %></h3>
-                
-                <!-- Opcija za Jelo 1 -->
-                <div class="meal-option radio-option">
-                    <input type="radio" 
-                           id="choice_<%= dayKey %>_1" 
-                           name="choices[<%= dayKey %>]" 
-                           value="1"
-                           <%= (userChoices[dayKey] === 1) ? 'checked' : '' %>>
-                    <label for="choice_<%= dayKey %>_1">
-                        <strong>1)</strong> <%= menuItem.meal_1 %>
-                    </label>
-                </div>
+<% if (typeof message !== 'undefined' && message) { %><p class="message success-message"><%= message %></p><% } %>
+<% if (typeof error !== 'undefined' && error) { %><p class="message error-message"><%= error %></p><% } %>
 
-                <% if (menuItem.has_two_options) { %>
-                    <!-- Opcija za Jelo 2 (ako postoji) -->
-                    <div class="meal-option radio-option">
-                        <input type="radio" 
-                               id="choice_<%= dayKey %>_2" 
-                               name="choices[<%= dayKey %>]" 
-                               value="2"
-                               <%= (userChoices[dayKey] === 2) ? 'checked' : '' %>>
-                        <label for="choice_<%= dayKey %>_2">
-                            <strong>2)</strong> <%= menuItem.meal_2 %>
-                        </label>
-                    </div>
+<form action="/dashboard" method="POST" class="meal-form">
+    <% if (workWeekDays && workWeekDays.length > 0) { %>
+        <% workWeekDays.forEach((day, index) => { %>
+            <% const dayKey = day.dayKey; %>
+            <% const dayOfWeekNumeric = index + 1; %>
+            <% const menuItem = displayedMenu[dayKey]; // Ovo je arhivirani meni ili template ako arhivirani ne postoji %>
+            <% const userChoiceForThisDay = userChoices[dayOfWeekNumeric]; %>
+            <% 
+               let dayDisplayName = (menuItem && menuItem.name && menuItem.name !== "Nije definirano") 
+                                    ? menuItem.name 
+                                    : ( (locals.DAY_DISPLAY_NAMES && locals.DAY_DISPLAY_NAMES[dayKey]) 
+                                        ? locals.DAY_DISPLAY_NAMES[dayKey] 
+                                        : (dayKey ? dayKey.toUpperCase() : 'NEPOZNAT DAN') );
+            %>
+            
+            <div class="day-card">
+                <h3>
+                    <%= dayDisplayName %>
+                    <% if (day && day.date) { %>
+                        (<%= formatDateToDDMMYYYY(day.date) %>)
+                    <% } %>
+                </h3>
+                
+                <%# AŽURIRANA LOGIKA ZA PRIKAZ JELA/PORUKA (PREMA NOVOM PRIJEDLOGU) %>
+                <% if (isFutureWeek) { %>
+                    <p class="admin-info-italic futura-week-message" style="text-align:center;">Jelovnik za ovaj dan još nije dostupan.</p>
+                
+                <% } else if (isCurrentWeek) { %>
+                    <!-- TEKUĆI TJEDAN -->
+                    <% if (!isMenuPublished) { %>
+                        <p class="admin-info-italic current-week-not-published-message" style="text-align:center;">Jelovnik za ovaj dan još nije službeno objavljen. Odabir će biti moguć kada se objavi.</p>
+                    <% } else if (menuItem && menuItem.no_offer_today) { %>
+                        <p class="admin-info-italic no-offer-message" style="text-align:center; color: #d35400; font-weight:bold;">Nema ponude jela za ovaj dan.</p>
+                    <% } else if (menuItem && menuItem.meal_1 && menuItem.meal_1 !== "Nije definirano" && menuItem.meal_1.trim() !== "") { %>
+                        <!-- Prikaz radio gumba za tekući, objavljeni tjedan -->
+                        <div class="meal-option radio-option">
+                            <input type="radio" id="choice_<%= day.dateString %>_1" name="choices[<%= day.dateString %>]" value="1"
+                                   <%= (userChoiceForThisDay && userChoiceForThisDay.option === 1) ? 'checked' : '' %>>
+                            <label for="choice_<%= day.dateString %>_1"><strong>1)</strong> <%- menuItem.meal_1 %></label>
+                        </div>
+                        <% if (menuItem.has_two_options) { %>
+                            <% if (menuItem.meal_2 && menuItem.meal_2 !== "Nije definirano" && menuItem.meal_2.trim() !== "") { %>
+                                <div class="meal-option radio-option">
+                                    <input type="radio" id="choice_<%= day.dateString %>_2" name="choices[<%= day.dateString %>]" value="2"
+                                           <%= (userChoiceForThisDay && userChoiceForThisDay.option === 2) ? 'checked' : '' %>>
+                                    <label for="choice_<%= day.dateString %>_2"><strong>2)</strong> <%- menuItem.meal_2 %></label>
+                                </div>
+                                <% if (menuItem.option_2_prompt && menuItem.option_2_prompt.trim() !== "") { %><p class="choice-prompt"><em><%= menuItem.option_2_prompt %></em></p><% } %>
+                            <% } else { %>
+                                <div class="meal-option"><p class="admin-info-italic">Jelo 2 za ovaj dan nije definirano.</p></div>
+                            <% } %>
+                        <% } %>
+                        <% if (userChoiceForThisDay && userChoiceForThisDay.option) { %>
+                            <div style="margin-top: 10px; text-align: right;">
+                                <button type="button" class="button-small button-link-style" onclick="clearChoice('<%= day.dateString %>')">Poništi odabir</button>
+                            </div>
+                        <% } %>
+                    <% } else { %>
+                        <p class="admin-info-italic centered-text" style="text-align:center;">Jelovnik za ovaj dan još nije postavljen.</p>
+                    <% } %>
+                
+                <% } else { // PROŠLI TJEDAN %>
+                    <% if (isMenuPublished) { %>
+                        <% if (menuItem && menuItem.no_offer_today) { %>
+                            <p class="admin-info-italic no-offer-message" style="text-align:center; color: #d35400; font-weight:bold;">Nije bilo ponude jela za ovaj dan.</p>
+                        <% } else if (menuItem && menuItem.meal_1 && menuItem.meal_1 !== "Nije definirano" && menuItem.meal_1.trim() !== "") { %>
+                            <div class="meal-option past-week-meal"><p>Ponuđeno Jelo 1: <%- menuItem.meal_1 %></p></div>
+                            <% if (menuItem.has_two_options && menuItem.meal_2 && menuItem.meal_2 !== "Nije definirano" && menuItem.meal_2.trim() !== "") { %>
+                                <div class="meal-option past-week-meal"><p>Ponuđeno Jelo 2: <%- menuItem.meal_2 %></p></div>
+                            <% } %>
+                            <hr style="margin:10px 0;">
+                        <% } else { %>
+                             <p class="admin-info-italic centered-text" style="text-align:center;">Nema podataka o jelovniku za ovaj dan.</p>
+                        <% } %>
+                    <% } else { // Prošli tjedan, ali meni NIJE bio objavljen %>
+                        <p class="admin-info-italic past-week-not-published-message" style="text-align:center;">Nema podataka o službeno objavljenom jelovniku za ovaj dan.</p>
+                    <% } %>
                     
-                    <% if (menuItem.option_2_prompt) { %> 
-                        <p class="choice-prompt"><em><%= menuItem.option_2_prompt %></em></p>
+                    <%# Prikaz korisničkog odabira za prošli tjedan, neovisno o tome je li meni bio objavljen %>
+                    <% if (userChoiceForThisDay && userChoiceForThisDay.option && userChoiceForThisDay.description) { %>
+                        <p class="user-choice-past" style="padding: 10px; background-color: #e9f5e9; border-left: 3px solid var(--success-color, #4CAF50); border-radius:var(--border-radius-sm, 4px); margin-top:10px;">
+                            Vaš odabir je bio: <strong><%- userChoiceForThisDay.description %></strong>
+                        </p>
+                    <% } else { %>
+                        <p class="admin-info-italic centered-text" style="text-align:center; margin-top:10px;">Niste imali odabir za ovaj dan.</p>
                     <% } %>
                 <% } %>
-                
-                <!-- Opcionalno: Link/gumb za brisanje odabira za dan -->
-                <% if (userChoices[dayKey]) { // Pokaži samo ako postoji odabir %>
-                    <div style="margin-top: 10px; text-align: right;">
-                        <button type="button" 
-                                class="button-small button-link-style" 
-                                onclick="clearChoice('<%= dayKey %>')">
-                            Poništi odabir za ovaj dan
-                        </button>
-                    </div>
-                <% } %>
             </div>
-        <% } %>
-    <% }); %>
-    <button type="submit" class="save-button">Spremi Sve Odabire</button>
+        <% }); %>
+    <% } else { %>
+        <p>Nema definiranih dana za prikaz.</p>
+    <% } %>
+
+    <%# AŽURIRANA LOGIKA ZA GUMB ZA SPREMANJE %>
+    <% if (isCurrentWeek && isMenuPublished) { %> 
+        <button type="submit" class="save-button">Spremi Sve Odabire</button>
+    <% } %>
+    <%# Obrisana else if grana za admina ako meni nije objavljen, jer ste naveli da to nije potrebno za ovaj fajl %>
 </form>
 
 <script>
-function clearChoice(dayKey) {
-    const radioButtons = document.querySelectorAll(`input[name="choices[${dayKey}]"]`);
-    radioButtons.forEach(radio => {
-        radio.checked = false;
-    });
+function clearChoice(dateString) {
+    const radioButtons = document.querySelectorAll(`input[name="choices[${dateString}]"]`);
+    radioButtons.forEach(radio => { radio.checked = false; });
 }
 </script>
 
 <style>
-.radio-option {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    margin-bottom: 8px;
-    border: 1px solid #eee;
-    border-radius: var(--border-radius-sm, 4px);
-    background-color: #f9f9f9;
+.page-title { text-align: center; margin-bottom: 10px; }
+.page-description { text-align: center; margin-bottom: 20px; color: #555; font-size: 0.95rem; }
+.disabled-label { color: #aaa !important; cursor: not-allowed !important; }
+.radio-option { display: flex; align-items: center; padding: 10px; margin-bottom: 8px; border: 1px solid #eee; border-radius: var(--border-radius-sm, 4px); background-color: #f9f9f9; }
+.radio-option input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
+.radio-option input[type="radio"]:disabled + label { color: #aaa; cursor: not-allowed; } 
+.radio-option label { cursor: pointer; flex-grow: 1; }
+.button-link-style { background: none; border: none; color: var(--link-color, #007bff); text-decoration: underline; padding: 0; font-size: 0.85em; cursor: pointer; }
+.button-link-style:hover { color: var(--primary-color-dark, #0056b3); }
+.admin-info-italic { font-style: italic; color: #6b7280; margin-top: 10px; }
+.choice-prompt { font-style: italic; color: #555; font-size: 0.9em; margin-top: 5px; margin-bottom: 10px; }
+.day-card { background-color: var(--card-background, #fff); padding: 20px; border-radius: var(--border-radius-md, 8px); border: 1px solid var(--border-color, #e5e7eb); box-shadow: var(--card-shadow, 0 2px 4px rgba(0,0,0,0.05)); margin-bottom: 15px; }
+.day-card h3 { color: var(--primary-color); text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; margin-top:0; font-size: 1.2em; }
+.save-button { display: block; width: 100%; max-width: 300px; margin: 20px auto 0 auto; padding: 12px 20px; font-size: 1.1rem; }
+
+.futura-week-message,
+.current-week-not-published-message,
+.past-week-not-published-message,
+.no-offer-message,
+.centered-text {
+    text-align: center; 
 }
-.radio-option input[type="radio"] {
-    margin-right: 10px;
-    transform: scale(1.2);
-}
-.radio-option label {
-    cursor: pointer;
-    flex-grow: 1; 
-}
-.button-link-style { 
-    background: none;
-    border: none;
-    color: var(--link-color, #007bff);
-    text-decoration: underline;
-    padding: 0;
-    font-size: 0.85em;
-    cursor: pointer;
-}
-.button-link-style:hover {
-    color: var(--primary-color-dark, #0056b3);
+.no-offer-message { color: #d35400; font-weight:bold; }
+.user-choice-past { 
+    padding: 10px; 
+    background-color: #e9f5e9; 
+    border-left: 3px solid var(--success-color, #4CAF50); 
+    border-radius:var(--border-radius-sm, 4px); 
+    margin-top:10px;
 }
 </style>
 

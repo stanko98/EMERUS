@@ -1,34 +1,66 @@
 <%- include('../partials/header', { title: title }) %>
 
-<h2><%= title %></h2>
+<h2 class="page-title"><%= title %></h2>
 
-<% if (choices && choices.length > 0) { %>
-    <p>Pregled odabira za korisnika <strong><%= userName %></strong>:</p>
-    <table class="votes-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <thead>
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Dan</th>
-                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">Odabrano Jelo</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% choices.forEach(choiceDetail => { %>
+<div class="content-card" style="max-width: 800px; margin: 20px auto; padding: 20px;">
+    <p style="font-size: 1.1em; margin-bottom: 15px;">Pregled odabira za korisnika: <strong><%= userName %></strong></p>
+    <p style="font-size: 1em; margin-bottom: 20px;">Tjedan: <strong><%= currentWeekDisplay %></strong></p>
+
+    <!-- Navigacija kroz tjedne -->
+    <div class="week-navigation" style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border-color, #eee);">
+        <% if (prevWeekLink) { %>
+            <a href="<%= prevWeekLink %>" class="button button-small">« Prethodni tjedan</a>
+        <% } else { %>
+            <span style="visibility: hidden;"><a class="button button-small">« Prethodni tjedan</a></span> <!-- Za održavanje prostora -->
+        <% } %>
+        <span style="font-weight: bold;">Odabir Tjedna</span>
+        <% if (nextWeekLink) { %>
+            <a href="<%= nextWeekLink %>" class="button button-small">Sljedeći tjedan »</a>
+        <% } else { %>
+            <span style="visibility: hidden;"><a class="button button-small">Sljedeći tjedan »</a></span> <!-- Za održavanje prostora -->
+        <% } %>
+    </div>
+
+    <% if (choices && choices.length > 0) { %>
+        <table class="votes-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
                 <tr>
-                    <td style="border: 1px solid #ddd; padding: 8px;"><%= choiceDetail.dayName %></td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">
-                        <%= choiceDetail.chosenMealDescription %>
-                    </td>
+                    <th style="border: 1px solid #ddd; padding: 10px; background-color: #f2f2f2; text-align: left;">Dan</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; background-color: #f2f2f2; text-align: left;">Odabrano Jelo</th>
                 </tr>
-            <% }); %>
-        </tbody>
-    </table>
-<% } else { %>
-    <p>Korisnik <strong><%= userName %></strong> nema zabilježenih odabira.</p>
-<% } %>
+            </thead>
+            <tbody>
+                <% choices.forEach(choiceDetail => { %>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 10px; vertical-align: top;"><strong><%= choiceDetail.dayName %></strong></td>
+                        <td style="border: 1px solid #ddd; padding: 10px; vertical-align: top;">
+                            <%= choiceDetail.chosenMealDescription %>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    <% } else { %>
+        <p class="admin-info-italic" style="margin-top: 15px;">Korisnik <strong><%= userName %></strong> nema zabilježenih odabira za prikazani tjedan.</p>
+    <% } %>
 
-<p style="margin-top: 30px;">
-    <a href="/admin/all-users" class="button">Povratak na Popis Korisnika</a>
-    <a href="/admin" class="button" style="margin-left: 10px;">Admin Dashboard</a>
-</p>
+    <div class="form-actions" style="margin-top: 30px; text-align: center;">
+        <a href="/admin/all-users" class="buttoni">Natrag na Popis Korisnika</a>
+        <a href="/admin" class="buttoni button-secondary" style="margin-left: 10px;">Admin Dashboard</a>
+    </div>
+</div>
+
+<style> 
+    .content-card {
+        background-color: var(--card-background, #fff);
+        border-radius: var(--border-radius-md, 8px);
+        box-shadow: var(--card-shadow, 0 2px 8px rgba(0,0,0,0.1));
+        border: 1px solid var(--border-color, #e5e7eb);
+     }
+    .votes-table {
+        width: 100%;
+        border-collapse: collapse;
+         }
+</style>
 
 <%- include('../partials/footer') %>

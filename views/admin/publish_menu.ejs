@@ -1,0 +1,57 @@
+```html
+  <%- include('../partials/header', { title: title }) %>
+
+  <h2 class="page-title"><%= title %></h2>
+  
+  <% if (typeof message !== 'undefined' && message) { %><p class="message success-message"><%= message %></p><% } %>
+  <% if (typeof error !== 'undefined' && error) { %><p class="message error-message"><%= error %></p><% } %>
+
+  <div class="content-card" style="max-width: 700px; margin: 20px auto; padding: 20px;">
+      <p class="page-description" style="margin-bottom: 20px;">
+          Ovdje možete objaviti trenutno postavljeni <strong>template jelovnika</strong> za određeni budući tjedan.
+          Korisnici će vidjeti ovaj objavljeni jelovnik kada dođe taj tjedan.
+      </p>
+
+      <h4 style="margin-bottom:10px;">Trenutni Template Jelovnika (koji će biti objavljen):</h4>
+      <div class="menu-preview-admin" style="margin-bottom: 25px; padding:15px; background-color:#f9f9f9; border-radius:8px;">
+          <% if (locals.weeklyMenu && locals.daysOrder) { %>
+              <% locals.daysOrder.forEach(dayKey => { %>
+                  <% const menuItem = locals.weeklyMenu[dayKey]; %>
+                  <% if (menuItem) { %>
+                      <div style="margin-bottom:8px; padding-bottom:8px; border-bottom:1px dotted #eee;">
+                          <strong><%= menuItem.name %>:</strong>
+                          <div style="padding-left:15px; font-size:0.9em;">
+                              Jelo 1: <%- menuItem.meal_1 || "<em>Nije definirano</em>" %><br>
+                              <% if (menuItem.has_two_options) { %>
+                                  Jelo 2: <%- menuItem.meal_2 || "<em>Nije definirano</em>" %>
+                              <% } %>
+                          </div>
+                      </div>
+                  <% } %>
+              <% }); %>
+          <% } else { %>
+              <p>Greška: Template jelovnik nije dostupan.</p>
+          <% } %>
+      </div>
+
+      <form action="/admin/menu/publish" method="POST">
+          <div class="form-group">
+              <label for="week-to-publish" style="font-weight: bold; display:block; margin-bottom:8px;">Odaberite tjedan za koji objavljujete ovaj jelovnik:</label>
+              <select name="week_start_date" id="week-to-publish" class="form-control" required style="padding: 10px; font-size: 1rem; min-width: 250px;">
+                  <% if (futureWeeks && futureWeeks.length > 0) { %>
+                      <% futureWeeks.forEach(week => { %>
+                          <option value="<%= week.value %>"><%= week.display %></option>
+                      <% }); %>
+                  <% } else { %>
+                      <option value="">Nema dostupnih tjedana za odabir</option>
+                  <% } %>
+              </select>
+          </div>
+          <div class="form-actions" style="margin-top:25px;">
+              <button type="submit" class="buttoni">Objavi Jelovnik za Odabrani Tjedan</button>
+              <a href="/admin/menu" class="buttoni button-secondary" style="margin-left:10px;">Natrag na Uređivanje Templatea</a>
+          </div>
+      </form>
+  </div>
+  <%- include('../partials/footer') %>
+  ```

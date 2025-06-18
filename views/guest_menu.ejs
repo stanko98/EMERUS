@@ -1,50 +1,133 @@
-<%# meal-planner/views/guest_menu.ejs %>
-<%- include('partials/header', { title: 'Tjedni Menu - Emerus Kuhinja' }) %>
+<%- include('partials/header', { title: title || `Tjedni Menu (${currentWeekDisplay}) - Emerus Kuhinja` }) %>
 
-<div class="guest-menu-info" style="text-align: center; margin-bottom: 25px; padding: 15px; background-color: #eef; border-radius: var(--border-radius-md);">
+<div class="guest-menu-info" style="text-align: center; margin-bottom: 25px; padding: 15px; background-color: #eef; border-radius: var(--border-radius-md, 8px);">
     <p style="font-size: 1.1em; color: #333;">
-        Molimo <a href="/login" style="color: var(--link-color); font-weight: bold; text-decoration: underline;">prijavite se</a> kako biste izabrali željene obroke za ovaj tjedan.
+        Molimo <a href="/login" style="color: var(--link-color); font-weight: bold; text-decoration: underline;">prijavite se</a> kako biste mogli odabrati željena jela.
     </p>
 </div>
 
-<h2 class="page-title">Popis jela kroz tjedan:</h2>
+<h2 class="page-title">Popis jela za tjedan (<%= currentWeekDisplay %>):</h2>
 
-<div class="meal-display"> 
-    <% daysOrder.forEach(dayKey => { %>
-        <% const menuItem = weeklyMenu[dayKey]; %>
-        <% if (menuItem) { %>
-            <div class="day-card guest-day-card"> 
-                <h3><%= menuItem.name %></h3>
-                
-                <div class="meal-option">
-                    <p><strong>1)</strong> <%= menuItem.meal_1 %></p>
-                </div>
+<!-- Navigacija kroz tjedne -->
+<div class="week-navigation" style="margin: 20px 0; display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border-color, #eee);">
+    <% if (prevWeekLink) { %>
+        <a href="<%= prevWeekLink %>" class="button button-small">« Prethodni tjedan</a>
+    <% } else { %>
+        <span style="visibility: hidden;"><a class="button button-small">« Prethodni tjedan</a></span>
+    <% } %>
+    <span style="font-weight: bold; color: var(--text-color, #333);">Odabir Tjedna</span>
+    <% if (nextWeekLink) { %>
+        <a href="<%= nextWeekLink %>" class="button button-small">Sljedeći tjedan »</a>
+    <% } else { %>
+        <span style="visibility: hidden;"><a class="button button-small">Sljedeći tjedan »</a></span>
+    <% } %>
+</div>
 
-                <% if (menuItem.has_two_options) { %>
-                    <div class="meal-option">
-                        <p><strong>2)</strong> <%= menuItem.meal_2 %></p>
-                    </div>
-                    <% if (menuItem.option_2_prompt) { %>
+<!-- OPISNE PORUKE NA VRHU -->
+<% if (isCurrentWeek) { %>
+    <% if (isMenuPublished) { %><p class="page-description">Prikaz jelovnika za tekući tjedan.</p><% } else { %><p class="page-description" style="color: #e67e22; font-weight:bold;">Jelovnik za tekući tjedan još nije službeno objavljen.</p><% } %>
+<% } else if (isFutureWeek) { %><p class="page-description">Jelovnik za ovaj tjedan još nije objavljen.</p><% } else { // Prošli tjedan %>
+    <% if (isMenuPublished) { %><p class="page-description">Prikaz objavljenog jelovnika za odabrani prošli tjedan.</p><% } else { %><p class="page-description" style="color: #777;">Nema podataka o službeno objavljenom jelovniku za ovaj prošli tjedan.</p><% } %>
+<% } %>
+
+
+<div class="meal-display" style="display: flex; flex-direction: column; align-items: center; gap: 20px;"> 
+    <% if (workWeekDays && workWeekDays.length > 0) { %>
+        <% workWeekDays.forEach(day => { %>
+            <% const dayKey = day.dayKey; %>
+            <% const menuItem = displayedMenu[dayKey]; /* Već bi trebao biti fallbackan u ruti */ %>
+            <% 
+               let dayDisplayName = (menuItem && menuItem.name && menuItem.name !== "Nije definirano") 
+                                    ? menuItem.name 
+                                    : ( (locals.DAY_DISPLAY_NAMES && locals.DAY_DISPLAY_NAMES[dayKey]) 
+                                        ? locals.DAY_DISPLAY_NAMES[dayKey] 
+                                        : (dayKey ? dayKey.toUpperCase() : 'NEPOZNAT DAN') );
+            %>
+            
+            <div class="day-card guest-day-card" style="width:100%; max-width:650px;">
+                <h3>
+                    <%= dayDisplayName %> 
+                    <% if (day && day.date) { %>
+                        (<%= formatDateToDDMMYYYY(day.date) %>)
                     <% } %>
+                </h3>
+                
+                <%# AŽURIRANA LOGIKA ZA PRIKAZ JELA/PORUKA PREMA NOVOM PRIJEDLOGU %>
+                <% if (isFutureWeek) { %>
+                    <p class="admin-info-italic futura-week-message" style="text-align:center;">Jelovnik za ovaj dan još nije dostupan.</p>
+                <% } else if (isCurrentWeek && !isMenuPublished) { %>
+                    <p class="admin-info-italic current-week-not-published-message" style="text-align:center;">Jelovnik za ovaj dan još nije službeno objavljen.</p>
+                <% } else if (!isCurrentWeek && !isFutureWeek && !isMenuPublished) { // PROŠLI TJEDAN, a meni NIJE bio objavljen %>
+                    <p class="admin-info-italic past-week-not-published-message" style="text-align:center;">Nema podataka o jelovniku za ovaj dan.</p> 
+                <% } else if (menuItem && menuItem.no_offer_today) { %>
+                     <p class="admin-info-italic no-offer-message" style="text-align:center; color: #d35400; font-weight:bold;">Nema ponude jela za ovaj dan.</p>
+                <% } else if (menuItem && menuItem.meal_1 && menuItem.meal_1 !== "Nije definirano" && menuItem.meal_1.trim() !== "") { %>
+                    <%# Prikaz jela ako su svi gornji uvjeti prošli i jelo 1 postoji %>
+                    <div class="meal-option">
+                        <p><strong>1)</strong> <%- menuItem.meal_1 %></p>
+                    </div>
+                    <% if (menuItem.has_two_options) { %>
+                        <% if (menuItem.meal_2 && menuItem.meal_2 !== "Nije definirano" && menuItem.meal_2.trim() !== "") { %>
+                            <div class="meal-option">
+                                <p><strong>2)</strong> <%- menuItem.meal_2 %></p>
+                            </div>
+                            <% if (menuItem.option_2_prompt && menuItem.option_2_prompt.trim() !== "") { %>
+                                <p class="choice-prompt"><em><%= menuItem.option_2_prompt %></em></p>
+                            <% } %>
+                        <% } else { %>
+                            <p class="admin-info-italic" style="padding:10px;">Jelo 2 za ovaj dan nije definirano.</p>
+                        <% } %>
+                    <% } %>
+                <% } else { %>
+                     <p class="admin-info-italic centered-text" style="padding:10px;text-align: center;">Jelovnik za ovaj dan još nije postavljen.</p>
                 <% } %>
             </div>
-        <% } %>
-    <% }); %>
+        <% }); %>
+    <% } else { %>
+        <p style="text-align:center; margin-top: 20px;">Nema definiranih dana za prikaz.</p>
+    <% } %>
 </div>
 
 <%- include('partials/footer') %>
 
 <style>
-    
-    .meal-display {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
+    .page-title { text-align: center; margin-bottom: 10px; }
+    .page-description { text-align: center; margin-bottom: 20px; color: #555; font-size: 0.95rem; }
+    .day-card.guest-day-card { 
+        background-color: var(--card-background, #fff); 
+        padding: 20px; 
+        border-radius: var(--border-radius-md, 8px); 
+        border: 1px solid var(--border-color, #e5e7eb); 
+        box-shadow: var(--card-shadow, 0 2px 4px rgba(0,0,0,0.05)); 
     }
-    
-    .guest-menu-info p a:hover {
-        text-decoration: none; 
-        color: var(--primary-color-dark);
+    .day-card.guest-day-card h3 { 
+        color: var(--primary-color, #4CAF50); 
+        text-align: center; 
+        border-bottom: 1px solid var(--border-color, #eee); 
+        padding-bottom: 10px; 
+        margin-bottom: 15px; 
+        margin-top:0; 
+    }
+    .day-card.guest-day-card .meal-option { 
+        margin-bottom: 10px; 
+        padding: 10px; 
+        background-color: #f9f9f9; 
+        border: 1px solid #eee; 
+        border-radius: var(--border-radius-sm, 4px); 
+    }
+    .day-card.guest-day-card .meal-option p { margin:0; }
+    .admin-info-italic { font-style: italic; color: #6b7280; margin-top: 10px; }
+    .choice-prompt { font-style: italic; color: #555; font-size: 0.9em; margin-top: 5px; margin-bottom: 10px; }
+
+    .futura-week-message,
+    .current-week-not-published-message,
+    .past-week-not-published-message,
+    .no-offer-message,
+    .centered-text {
+        text-align: center;
+    }
+    .no-offer-message {
+        color: #d35400; 
+        font-weight:bold;
     }
 </style>

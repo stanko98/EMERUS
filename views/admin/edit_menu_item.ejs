@@ -1,52 +1,103 @@
-<%# meal-planner/views/admin/edit_menu_item.ejs %>
 <%- include('../partials/header', { title: title }) %>
 
 <h2><%= title %></h2>
 
 <% if (typeof error !== 'undefined' && error) { %><p class="message error-message"><%= error %></p><% } %>
 
-<form action="/admin/menu/edit/<%= dayKey %>" method="POST" class="styled-form" style="max-width: 700px; margin: 20px auto; padding:20px; background: #fff; border-radius: var(--border-radius-md); box-shadow: var(--card-shadow);">
+<form action="/admin/menu/edit/<%= dayKey %>" method="POST" class="styled-form" style="max-width: 700px; margin: 20px auto; padding:20px; background: #fff; border-radius: var(--border-radius-md, 8px); box-shadow: var(--card-shadow);">
     
     <div class="form-group">
         <label for="day_name_display">Naziv Dana (za prikaz):</label>
-        <input type="text" id="day_name_display" name="day_name_display" value="<%= dayMenu.day_name_display %>" required>
+        <input type="text" id="day_name_display" name="day_name_display" value="<%= dayMenu.day_name_display %>" required class="form-control">
     </div>
 
-    <div class="form-group">
-        <label for="meal_1_description">Opis Jela 1 (obavezno):</label>
-        <textarea id="meal_1_description" name="meal_1_description" rows="3" required><%= dayMenu.meal_1_description %></textarea>
+    <div class="form-group checkbox-group" style="flex-direction: row; align-items: center; margin-bottom: 20px; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+        <input type="checkbox" id="no_offer_today" name="no_offer_today" 
+               <%= (typeof dayMenu.no_offer_today !== 'undefined' && dayMenu.no_offer_today) ? 'checked' : '' %> 
+               onchange="toggleMealEntryFields()">
+        <label for="no_offer_today" style="margin-bottom: 0; margin-left: 8px; font-weight: bold; color: #c0392b;">Nema ponude jela za danas?</label>
     </div>
 
-    <div class="form-group checkbox-group" style="flex-direction: row; align-items: center;">
-        <input type="checkbox" id="has_two_options" name="has_two_options" <%= dayMenu.has_two_options ? 'checked' : '' %> onchange="toggleMeal2Fields()">
-        <label for="has_two_options" style="margin-bottom: 0; margin-left: 8px;">Ponudi drugo jelo (Jelo 2)?</label>
-    </div>
-
-    <div id="meal2-fields" style="display: none;">
+    <div id="meal-entry-fields-wrapper" class="<%= (dayMenu && dayMenu.no_offer_today) ? 'hidden-element' : '' %>">
         <div class="form-group">
-            <label for="meal_2_description">Opis Jela 2 (obavezno):</label>
-            <textarea id="meal_2_description" name="meal_2_description" rows="3"><%= dayMenu.meal_2_description || '' %></textarea>
+            <label for="meal_1_description">Opis Jela 1 (obavezno ako se nudi):</label>
+            <textarea id="meal_1_description" name="meal_1_description" rows="3" 
+                      <%= !(typeof dayMenu.no_offer_today !== 'undefined' && dayMenu.no_offer_today) ? 'required' : '' %> 
+                      class="form-control"><%= dayMenu.meal_1_description || '' %></textarea>
+        </div>
+
+        <div class="form-group checkbox-group" style="flex-direction: row; align-items: center;">
+            <input type="checkbox" id="has_two_options" name="has_two_options" 
+                   <%= (typeof dayMenu.has_two_options !== 'undefined' && dayMenu.has_two_options && !(typeof dayMenu.no_offer_today !== 'undefined' && dayMenu.no_offer_today)) ? 'checked' : '' %> 
+                   onchange="toggleMeal2DescriptionFields()"
+                   <%= (typeof dayMenu.no_offer_today !== 'undefined' && dayMenu.no_offer_today) ? 'disabled' : '' %>>
+            <label for="has_two_options" style="margin-bottom: 0; margin-left: 8px;">Ponudi drugo jelo (Jelo 2)?</label>
+        </div>
+
+        <div id="meal2-description-fields" class="<%= (dayMenu && dayMenu.has_two_options && !(dayMenu.no_offer_today)) ? '' : 'hidden-element' %>">
+            <div class="form-group">
+                <label for="meal_2_description">Opis Jela 2 (obavezno ako se nudi Jelo 2):</label>
+                <textarea id="meal_2_description" name="meal_2_description" rows="3"
+                          <%= (typeof dayMenu.has_two_options !== 'undefined' && dayMenu.has_two_options && !(typeof dayMenu.no_offer_today !== 'undefined' && dayMenu.no_offer_today)) ? 'required' : '' %>
+                          class="form-control"><%= dayMenu.meal_2_description || '' %></textarea>
+            </div>
+             <div class="form-group">
+                <label for="option_2_prompt">Prompt za Jelo 2 (opcionalno):</label>
+                <input type="text" id="option_2_prompt" name="option_2_prompt" value="<%= dayMenu.option_2_prompt || '' %>" class="form-control">
+            </div>
         </div>
     </div>
 
     <div class="form-actions">
         <button type="submit" class="buttoni">Spremi Izmjene</button>
-        <a href="/admin/menu" class="buttoni buttoni-secondary">Odustani</a> 
+        <a href="/admin/menu" class="buttoni button-secondary">Odustani</a>
     </div>
 </form>
 
 <script>
-    function toggleMeal2Fields() {
-        const checkbox = document.getElementById('has_two_options');
-        const meal2FieldsDiv = document.getElementById('meal2-fields');
-        
-        if (checkbox.checked) {
-            meal2FieldsDiv.style.display = 'block';
+    const noOfferCheckbox = document.getElementById('no_offer_today');
+    const mealFieldsWrapper = document.getElementById('meal-entry-fields-wrapper');
+    const meal1Textarea = document.getElementById('meal_1_description');
+    const hasTwoOptionsCheckbox = document.getElementById('has_two_options');
+    const meal2FieldsDiv = document.getElementById('meal2-description-fields');
+    const meal2Textarea = document.getElementById('meal_2_description');
+
+    function toggleMealEntryFields() {
+        if (noOfferCheckbox.checked) {
+            mealFieldsWrapper.style.display = 'none';
+            meal1Textarea.removeAttribute('required');
+            hasTwoOptionsCheckbox.checked = false; 
+            hasTwoOptionsCheckbox.disabled = true;
+            meal2Textarea.removeAttribute('required'); 
+            toggleMeal2DescriptionFields(); 
         } else {
-            meal2FieldsDiv.style.display = 'none';
+            mealFieldsWrapper.style.display = 'block';
+            meal1Textarea.setAttribute('required', ''); 
+            hasTwoOptionsCheckbox.disabled = false;
+            toggleMeal2DescriptionFields(); 
         }
     }
-    document.addEventListener('DOMContentLoaded', toggleMeal2Fields);
+
+    function toggleMeal2DescriptionFields() {
+        
+        if (noOfferCheckbox.checked) {
+            meal2FieldsDiv.style.display = 'none';
+            meal2Textarea.removeAttribute('required');
+            return;
+        }
+
+        if (hasTwoOptionsCheckbox.checked) {
+            meal2FieldsDiv.style.display = 'block';
+            meal2Textarea.setAttribute('required', ''); 
+        } else {
+            meal2FieldsDiv.style.display = 'none';
+            meal2Textarea.removeAttribute('required');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleMealEntryFields(); 
+    });
 </script>
 
 <style>
@@ -62,7 +113,8 @@
     }
 
     .styled-form input[type="text"],
-    .styled-form textarea {
+    .styled-form textarea,
+    .styled-form select.form-control{
         width: 100%;
         padding: 10px;
         border: 1px solid #ccc; 
@@ -73,7 +125,13 @@
 
     .styled-form textarea {
         min-height: 80px;
+        resize: vertical;
     }
+    .form-actions { margin-top: 20px; display:flex; gap:10px; }
+
+    .hidden-element {
+        display: none !important;
+}
 
 </style>
 

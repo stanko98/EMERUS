@@ -1,0 +1,152 @@
+<%- include('../partials/header', { title: title }) %>
+
+<h2 class="page-title"><%= title %></h2>
+
+<!-- FORMA ZA ODABIR TJEDNA (ista kao na admin/dashboard) -->
+<div style="margin-bottom: 25px; padding: 15px; background-color: #f0f8ff; border-radius: var(--border-radius-md, 8px); display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+    <form id="week-selector-form-stats" method="GET" action="/admin/statistics" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <label for="week-select-stats" style="font-weight: bold; white-space: nowrap;">Odaberite tjedan za statistiku:</label>
+        <select name="week" id="week-select-stats" class="form-control" style="padding: 8px 12px; border-radius: var(--border-radius-sm, 4px); border: 1px solid #ccc; min-width: 220px;">
+            <% if (availableWeeksForDropdown && availableWeeksForDropdown.length > 0) { %>
+                <% availableWeeksForDropdown.forEach(weekInfo => { %>
+                    <option value="<%= weekInfo.value %>" <%= (selectedWeek === weekInfo.value) ? 'selected' : '' %>>
+                        <%= weekInfo.display %>
+                    </option>
+                <% }); %>
+            <% } else { %><option value="">Nema zabilježenih tjedana</option><% } %>
+        </select>
+        <button type="submit" class="button button-small" style="padding: 8px 15px;">Prikaži Statistiku</button>
+    </form>
+    <p style="margin: 0; font-style: italic; color: #555;">Prikazano za: <strong><%= currentWeekDisplay %></strong></p>
+</div>
+
+
+<% if (typeof message !== 'undefined' && message) { %><p class="message success-message"><%= message %></p><% } %>
+<% if (typeof error !== 'undefined' && error) { %><p class="message error-message"><%= error %></p><% } %>
+
+<div class="admin-statistics-details">
+    <!-- Odabiri po danima za odabrani tjedan -->
+    <% if (detailedVoteCounts) { %>
+      <section class="admin-panel-card" style="margin-bottom:20px;">
+        <h3 class="admin-card-title">Odabiri po danima (za odabrani tjedan: <%= currentWeekDisplay %>)</h3>
+        <div class="daily-stats-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+          <% daysOrder.forEach((dayKey, index) => { %>
+              <% const dayOfWeekNumeric = index + 1; %>
+              <% const dayStats = detailedVoteCounts[dayOfWeekNumeric]; %>
+              <% const dayMenuInfo = locals.weeklyMenu[dayKey] || {}; %>
+              
+              <% if (dayStats) { %>
+                  <div class="day-stat-card" style="border: 1px solid #ddd; padding: 10px 15px; border-radius: 8px; background-color: #fff;">
+                      <strong style="font-size: 1.1em; color: var(--primary-color);"><%= dayStats.dayName %>:</strong><br>
+                      <div style="margin-top: 5px; padding-left: 10px;">
+                          Jelo 1: <span class="admin-votes-grid__count"><%= dayStats.meal1_votes %></span>
+                          <% if (dayStats.meal1_votes > 0 && typeof currentWeekStartDateForLinks !== 'undefined') { %>
+                              <a href="/admin/voters/<%= currentWeekStartDateForLinks %>/<%= dayOfWeekNumeric %>/1" class="admin-votes-grid__view-link">(Vidi tko)</a>
+                          <% } %>
+                          <br>
+                          <% if (dayMenuInfo.has_two_options) { %>
+                              Jelo 2: <span class="admin-votes-grid__count"><%= dayStats.meal2_votes %></span>
+                              <% if (dayStats.meal2_votes > 0 && typeof currentWeekStartDateForLinks !== 'undefined') { %>
+                                  <a href="/admin/voters/<%= currentWeekStartDateForLinks %>/<%= dayOfWeekNumeric %>/2" class="admin-votes-grid__view-link">(Vidi tko)</a>
+                              <% } %>
+                          <% } else { %><span style="font-size: 0.85em; color: #777;">(Samo Jelo 1)</span><% } %>
+                      </div>
+                  </div>
+              <% } else { /* ... (fallback ako nema dayStats) ... */ } %>
+          <% }); %>
+        </div>
+        <% /* ... (logika za noVotesAtAll) ... */ %>
+      </section>
+    <% } else { %><p class="admin-info-italic">Nema podataka o glasovima po danima za odabrani tjedan.</p><% } %>
+
+    <!-- Popularnost za odabrani tjedan -->
+    <% if (mealPopularityForWeek && mealPopularityForWeek.length > 0) { %>
+      <section class="admin-panel-card" style="margin-bottom:20px;">
+        <h3 class="admin-card-title">Popularnost Jela (za odabrani tjedan: <%= currentWeekDisplay %>)</h3>
+        <!-- INPUT ZA PRETRAGU JELA -->
+        <div class="search-form-container" style="margin-bottom: 15px;">
+            <input type="text" id="search-meal-popularity-week" onkeyup="filterMealList('meal-popularity-week-list', 'search-meal-popularity-week')" placeholder="Pretraži jela..." class="form-control" style="padding: 8px;">
+        </div>
+        <ul id="meal-popularity-week-list" style="list-style-type: none; padding-left: 0;">
+            <% mealPopularityForWeek.forEach(mealStat => { %>
+                <li class="meal-stat-item" style="margin-bottom: 5px; padding: 3px 0;">
+                    <span class="meal-name" style="display:inline-block; min-width: 250px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;">
+                        <%= mealStat.meal %></span>: 
+                    <strong style="font-size: 1.1em;"><%= mealStat.count %></strong> odabira
+                </li>
+            <% }); %>
+        </ul>
+      </section>
+    <% } else if (mealPopularityForWeek) { %><p class="admin-info-italic">Nema podataka o popularnosti jela za odabrani tjedan.</p><% } %>
+
+    <!-- Ukupna popularnost svih jela -->
+    <% if (overallMealPopularity && overallMealPopularity.length > 0) { %>
+      <section class="admin-panel-card">
+        <h3 class="admin-card-title">Ukupna Popularnost Svih Jela (kroz sve tjedne)</h3>
+        <!-- INPUT ZA PRETRAGU JELA -->
+        <div class="search-form-container" style="margin-bottom: 15px;">
+            <input type="text" id="search-overall-meal-popularity" onkeyup="filterMealList('overall-meal-popularity-list', 'search-overall-meal-popularity')" placeholder="Pretraži jela..." class="form-control" style="padding: 8px;">
+        </div>
+        <ul id="overall-meal-popularity-list" style="list-style-type: none; padding-left: 0;">
+            <% overallMealPopularity.forEach(mealStat => { %>
+                <li class="meal-stat-item" style="margin-bottom: 5px; padding: 3px 0;">
+                     <span class="meal-name" style="display:inline-block; min-width: 250px; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;">
+                        <%= mealStat.meal %></span>: 
+                    <strong style="font-size: 1.1em;"><%= mealStat.count %></strong> ukupno odabira
+                </li>
+            <% }); %>
+        </ul>
+      </section>
+    <% } else if (overallMealPopularity) { %><p class="admin-info-italic">Nema podataka o ukupnoj popularnosti jela.</p><% } %>
+
+
+<!-- GUMB ZA EXPORT U EXCEL -->
+    <section class="admin-panel-card" style="margin-top: 20px; text-align:center;">
+        <h3 class="admin-card-title">Export Odabira</h3>
+        <p class="admin-card-text">Preuzmite popis svih odabira za trenutno prikazani tjedan (<%= currentWeekDisplay %>) u Excel formatu.</p>
+        <% if (selectedWeek) { // Osiguraj da je selectedWeek (YYYY-MM-DD) dostupan %>
+            <a href="/admin/export-choices/excel?week=<%= selectedWeek %>" 
+               class="button admin-action-button" 
+               target="_blank"> 
+                📊 Preuzmi Excel za Tjedan <%= currentWeekDisplay %>
+            </a>
+        <% } else { %>
+            <p class="admin-info-italic">Molimo prvo odaberite tjedan za export.</p>
+        <% } %>
+    </section>
+</div>
+
+<div style="text-align: center; margin-top: 30px;">
+    <a href="/admin" class="buttoni">Natrag na Admin Dashboard</a>
+</div>
+
+<script>
+    
+    function filterMealList(listId, inputId) {
+        const input = document.getElementById(inputId);
+        const filter = input.value.toUpperCase();
+        const ul = document.getElementById(listId);
+        const li = ul.getElementsByClassName('meal-stat-item'); 
+
+        for (let i = 0; i < li.length; i++) {
+            const mealNameSpan = li[i].getElementsByClassName("meal-name")[0]; 
+            if (mealNameSpan) {
+                const txtValue = mealNameSpan.textContent || mealNameSpan.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    li[i].style.display = "";
+                } else {
+                    li[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    const weekSelectStats = document.getElementById('week-select-stats');
+    if (weekSelectStats) {
+        weekSelectStats.addEventListener('change', function() {
+            document.getElementById('week-selector-form-stats').submit();
+        });
+    }
+</script>
+
+<%- include('../partials/footer') %>

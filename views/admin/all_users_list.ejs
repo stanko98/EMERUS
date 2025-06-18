@@ -1,6 +1,6 @@
 <%- include('../partials/header', { title: title }) %>
 
-<h2><%= title %> (<%= allUsersList.length %>)</h2>
+<h2 class="page-title"><%= title %> (<%= allUsersList.length %>)</h2>
 
 <% if (typeof message !== 'undefined' && message) { %>
     <p class="message success-message"><%= message %></p>
@@ -9,42 +9,78 @@
     <p class="message error-message"><%= error %></p>
 <% } %>
 
-<% if (allUsersList.length > 0) { %>
-    <div class="table-wrapper" style="overflow-x: auto; margin-top: 20px;">
-        <table class="users-table">
-            <thead>
-                <tr>
-                    <th>Korisničko ime</th>
-                    <th>Admin Status</th>
-                    <th>Akcije</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% allUsersList.forEach(userFromList => { %>
-                    <tr>
-                        <td><%= userFromList.username %></td>
-                        <td><%= userFromList.is_admin ? 'DA' : 'NE' %></td>
-                        <td>
-                            <a href="/admin/users/<%= userFromList.id %>/votes" class="button-small">Vidi Glasove</a>
-                            <% if (!userFromList.is_admin && userFromList.id !== locals.user.id) { %>
-                                <form action="/admin/users/delete/<%= userFromList.id %>" method="POST" style="display: inline;" onsubmit="return confirm('Jeste li sigurni da želite obrisati korisnika <%= userFromList.username %>?');">
-                                    <button type="submit" class="button-small button-danger">Obriši</button>
-                                </form>
-                            <% } else if (userFromList.id === locals.user.id) { %>
-                                <span>(Vi)</span>
-                            <% } %>
-                        </td>
-                    </tr>
-                <% }); %>
-            </tbody>
-        </table>
-    </div>
-<% } else { %>
-    <p style="margin-top: 20px;">Nema registriranih korisnika.</p>
-<% } %>
+<!--FORMA ZA PRETRAGU KORISNIKA -->
+<div class="search-form-container" style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: var(--border-radius-md, 8px);">
+    <form method="GET" action="/admin/all-users" style="display: flex; gap: 10px; align-items: center;">
+        <label for="search-users" style="font-weight: bold; white-space: nowrap;">Pretraži korisnike (korisničko ime):</label>
+        <input type="text" id="search-users" name="search" value="<%= typeof searchTerm !== 'undefined' ? searchTerm : '' %>" placeholder="Unesite dio korisničkog imena..." class="form-control" style="flex-grow: 1; padding: 8px;">
+        <button type="submit" class="button button-small" style="padding: 8px 15px;">Traži</button>
+        <% if (typeof searchTerm !== 'undefined' && searchTerm) { %>
+            <a href="/admin/all-users" class="button button-small button-secondary" style="padding: 8px 15px;">Poništi pretragu</a>
+        <% } %>
+    </form>
+</div>
 
-<p style="margin-top: 30px;">
-    <a href="/admin" class="button">Povratak na Admin Dashboard</a>
-</p>
+
+<div class="content-card" style="margin-top: 20px; padding: 20px;">
+    <% if (allUsersList.length > 0) { %>
+        <div class="table-wrapper" style="overflow-x: auto;">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Korisničko ime</th>
+                        <th>Admin Status</th>
+                        <th>Akcije</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% allUsersList.forEach(userFromList => { %>
+                        <tr>
+                            <td><%= userFromList.username %></td>
+                            <td><%= userFromList.is_admin ? 'DA' : 'NE' %></td>
+                            <td>
+                                <!-- Link "Vidi Glasove" sada uključuje currentWeekStartDateString kao query parametar -->
+                                <a href="/admin/users/<%= userFromList.id %>/votes?week=<%= currentWeekStartDateString %>" class="button-small">Vidi Glasove</a>
+                                
+                                <% if (!userFromList.is_admin && userFromList.id !== locals.user.id) { %>
+                                    <form action="/admin/users/delete/<%= userFromList.id %>" method="POST" style="display: inline;" onsubmit="return confirm('Jeste li sigurni da želite obrisati korisnika <%= userFromList.username %>?');">
+                                        <button type="submit" class="button-small button-danger">Obriši</button>
+                                    </form>
+                                <% } else if (userFromList.id === locals.user.id) { %>
+                                    <span style="margin-left: 5px; font-style: italic; color: #555;">(Vi)</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    <% } else { %>
+        <p class="admin-info-italic" style="margin-top: 15px;">
+            <% if (typeof searchTerm !== 'undefined' && searchTerm) { %>
+                Nema korisnika koji odgovaraju vašem pretraživanju: "<strong><%= searchTerm %></strong>".
+            <% } else { %>
+                Nema registriranih korisnika.
+            <% } %>
+        </p>
+    <% } %>
+
+    <div class="form-actions" style="margin-top: 30px; text-align: center;">
+        <a href="/admin" class="buttoni">Natrag na Admin Dashboard</a>
+    </div>
+</div>
+
+<style> 
+    .content-card {
+        background-color: var(--card-background, #fff);
+        border-radius: var(--border-radius-md, 8px);
+        box-shadow: var(--card-shadow, 0 2px 8px rgba(0,0,0,0.1));
+        border: 1px solid var(--border-color, #e5e7eb);
+     }
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+         }
+</style>
 
 <%- include('../partials/footer') %>

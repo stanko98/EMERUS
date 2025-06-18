@@ -1,20 +1,34 @@
 <%- include('../partials/header', { title: title }) %>
 
-<h2><%= title %></h2> 
+<h2 class="page-title"><%= title %></h2> 
+<%# Naslov se sada postavlja u ruti i uključuje Jelo, Dan i Tjedan %>
 
-<% if (voters && voters.length > 0) { %>
-    <p>Popis korisnika koji su odabrali <strong>Jelo <%= optionNumber %></strong> za dan <strong><%= dayName %></strong>:</p>
-    <ul class="voters-list" style="list-style-type: decimal; padding-left: 20px;">
-        <% voters.forEach(username => { %>
-            <li style="margin-bottom: 5px;"><%= username %></li>
-        <% }); %>
-    </ul>
-<% } else { %>
-    <p>Nema korisnika koji su odabrali <strong>Jelo <%= optionNumber %></strong> za dan <strong><%= dayName %></strong>.</p>
-<% } %>
+<div class="content-card" style="max-width: 700px; margin: 20px auto; padding: 20px;">
+    <% if (voters && voters.length > 0) { %>
+        <p style="margin-bottom: 15px;">Popis korisnika koji su odabrali <strong>Jelo <%= optionNumber %></strong> za dan <strong><%= dayName %></strong> (tjedan koji počinje <%= formatDateToDDMMYYYY(new Date(weekStartDate + "T00:00:00Z")) %>):</p>
+        <ul class="voters-list" style="list-style-type: decimal; padding-left: 25px; margin-bottom: 20px;">
+            <% voters.forEach(username => { %>
+                <li style="margin-bottom: 5px; font-size: 1rem;"><%= username %></li>
+            <% }); %>
+        </ul>
+    <% } else { %>
+        <p style="font-style: italic;">Nema korisnika koji su odabrali <strong>Jelo <%= optionNumber %></strong> za dan <strong><%= dayName %></strong> u tjednu koji počinje <%= weekStartDate %>.</p>
+    <% } %>
 
-<p style="margin-top: 30px;">
-    <a href="/admin" class="button">Povratak na Admin Dashboard</a>
-</p>
+    <div class="form-actions" style="margin-top: 30px; text-align: center;">
+        <a href="/admin" class="buttoni">Natrag na Admin Dashboard</a>
+        <% if (weekStartDate && dayKey) { %>
+        <% } %>
+    </div>
+</div>
+
+<style> 
+    .content-card {
+        background-color: var(--card-background, #fff);
+        border-radius: var(--border-radius-md, 8px);
+        box-shadow: var(--card-shadow, 0 2px 8px rgba(0,0,0,0.1));
+        border: 1px solid var(--border-color, #e5e7eb);
+    }
+</style>
 
 <%- include('../partials/footer') %>
