@@ -347,66 +347,104 @@ router.get('/users/:userId/votes', async (req, res) => {
 
     if (weekQuery && /^\d{4}-\d{2}-\d{2}$/.test(weekQuery)) {
         try {
-            const queryDate = new Date(weekQuery + "T00:00:00Z");
-            targetWeekStartDateString = formatDateToYYYYMMDD(getWeekStartDate(queryDate));
-            const endDateObj = new Date(getWeekStartDate(queryDate));
-            endDateObj.setDate(endDateObj.getDate() + 4);
-            targetWeekDisplay = `${formatDateToDDMMYYYY(getWeekStartDate(queryDate))} - ${formatDateToDDMMYYYY(endDateObj)}`;
+            const queryDate = new Date(weekQuery + "T00:00:00Z"); 
+            const weekStartForQuery = getWeekStartDate(queryDate); 
+            targetWeekStartDateString = formatDateToYYYYMMDD(weekStartForQuery); 
+            
+            const endDateObj = new Date(weekStartForQuery);
+            endDateObj.setDate(weekStartForQuery.getDate() + 4); 
+            targetWeekDisplay = `${formatDateToDDMMYYYY(weekStartForQuery)} - ${formatDateToDDMMYYYY(endDateObj)}`; 
         } catch (e) {
+            console.warn(`[GET /admin/users/${userId}/votes] Greška pri parsiranju 'week' (${weekQuery}), koristim tekući tjedan. Greška: ${e.message}`);
             const today = new Date();
-            targetWeekStartDateString = formatDateToYYYYMMDD(getWeekStartDate(today));
-            const endDateObj = new Date(getWeekStartDate(today));
-            endDateObj.setDate(endDateObj.getDate() + 4);
-            targetWeekDisplay = `${formatDateToDDMMYYYY(getWeekStartDate(today))} - ${formatDateToDDMMYYYY(endDateObj)}`;
+            const currentWeekStart = getWeekStartDate(today);
+            targetWeekStartDateString = formatDateToYYYYMMDD(currentWeekStart);
+            const currentWeekEnd = new Date(currentWeekStart);
+            currentWeekEnd.setDate(currentWeekStart.getDate() + 4);
+            targetWeekDisplay = `${formatDateToDDMMYYYY(currentWeekStart)} - ${formatDateToDDMMYYYY(currentWeekEnd)}`;
         }
     } else { 
         const today = new Date();
-        targetWeekStartDateString = formatDateToYYYYMMDD(getWeekStartDate(today));
-        const endDateObj = new Date(getWeekStartDate(today));
-        endDateObj.setDate(endDateObj.getDate() + 4);
-        targetWeekDisplay = `${formatDateToDDMMYYYY(getWeekStartDate(today))} - ${formatDateToDDMMYYYY(endDateObj)}`;
+        const currentWeekStart = getWeekStartDate(today);
+        targetWeekStartDateString = formatDateToYYYYMMDD(currentWeekStart);
+        const currentWeekEnd = new Date(currentWeekStart);
+        currentWeekEnd.setDate(currentWeekStart.getDate() + 4);
+        targetWeekDisplay = `${formatDateToDDMMYYYY(currentWeekStart)} - ${formatDateToDDMMYYYY(currentWeekEnd)}`;
+        if (weekQuery) { 
+             console.warn(`[GET /admin/users/${userId}/votes] Neispravan format 'week' query parametra (${weekQuery}), koristim tekući tjedan.`);
+        }
     }
     
     try {
         const user = await findUserById(userId);
-        if (!user) { return res.status(404).render('partials/error_page', { statusCode: 404, message: 'Korisnik nije pronađen.', title: 'Nije pronađeno'}); }
+        if (!user) { 
+            return res.status(404).render('partials/error_page', { 
+                statusCode: 404, message: 'Korisnik nije pronađen.', title: 'Nije pronađeno'
+            }); 
+        }
         
         const userChoices = await getUserChoicesForWeek(userId, targetWeekStartDateString); 
         const weeklyMenuTemplate = res.locals.weeklyMenu; 
 
         const choicesDetails = DAYS_OF_WEEK_ORDER.map((dayKey, index) => {
             const dayOfWeekNumeric = index + 1;
-            const dayMenu = weeklyMenuTemplate[dayKey] || {};
+            const dayMenu = weeklyMenuTemplate[dayKey] || { name: (DAY_DISPLAY_NAMES[dayKey] || dayKey.toUpperCase()), meal_1: null, has_two_options: false, meal_2: null};
             const userChoiceForDay = userChoices[dayOfWeekNumeric]; 
             let chosenMealDescription = "Ništa nije odabrano";
 
             if (userChoiceForDay && userChoiceForDay.option === 1) {
                 chosenMealDescription = `Jelo 1: ${userChoiceForDay.description || dayMenu.meal_1 || 'N/A'}`;
-            } else if (userChoiceForDay && userChoiceForDay.option === 2 && dayMenu.has_two_options) {
-                chosenMealDescription = `Jelo 2: ${userChoiceForDay.description || dayMenu.meal_2 || 'N/A'}`;
+            } else if (userChoiceForDay && userChoiceForDay.option === 2) {
+                
+                const meal2DescFromTemplate = dayMenu.has_two_options ? (dayMenu.meal_2 || 'N/A') : 'N/A (Jelo 2 nije bilo opcija)';
+                chosenMealDescription = `Jelo 2: ${userChoiceForDay.description || meal2DescFromTemplate}`;
             }
             
-            let dayDisplayName = (DAY_DISPLAY_NAMES && DAY_DISPLAY_NAMES[dayKey]) ? DAY_DISPLAY_NAMES[dayKey] : dayKey.toUpperCase();
-            if(dayMenu && dayMenu.name) { dayDisplayName = dayMenu.name; }
+            let dayDisplayName = dayKey.toUpperCase();
+            if (dayMenu && dayMenu.name && dayMenu.name !== "Nije definirano") {
+                dayDisplayName = dayMenu.name;
+            } else if (typeof DAY_DISPLAY_NAMES !== 'undefined' && DAY_DISPLAY_NAMES[dayKey]) {
+                dayDisplayName = DAY_DISPLAY_NAMES[dayKey];
+            }
 
             return { dayName: dayDisplayName, chosenMealDescription: chosenMealDescription };
         });
 
-        const currentWeekStartObj = new Date(targetWeekStartDateString + "T00:00:00Z");
-        const prevWeekStartObj = new Date(currentWeekStartObj); prevWeekStartObj.setDate(prevWeekStartObj.getDate() - 7);
-        const nextWeekStartObj = new Date(currentWeekStartObj); nextWeekStartObj.setDate(nextWeekStartObj.getDate() + 7);
-        const todayForComparison = new Date(); todayForComparison.setHours(0,0,0,0);
+        
+        const currentTargetWeekStartObj = new Date(targetWeekStartDateString + "T00:00:00Z"); 
 
+        const prevWeekStartObj = new Date(currentTargetWeekStartObj);
+        prevWeekStartObj.setDate(currentTargetWeekStartObj.getDate() - 7); 
+        const prevWeekLink = `/admin/users/${userId}/votes?week=${formatDateToYYYYMMDD(prevWeekStartObj)}`;
+
+        const nextWeekStartObj = new Date(currentTargetWeekStartObj);
+        nextWeekStartObj.setDate(currentTargetWeekStartObj.getDate() + 7); 
+        
+        const today = new Date();
+        const startOfTodayCalendarWeek = getWeekStartDate(today); 
+
+        let nextWeekLink = null;
+        if (currentTargetWeekStartObj.getTime() < startOfTodayCalendarWeek.getTime()) {
+            nextWeekLink = `/admin/users/${userId}/votes?week=${formatDateToYYYYMMDD(nextWeekStartObj)}`;
+        }
+        
         res.render('admin/user_votes', {
-            title: `Odabiri za ${user.username}`, userName: user.username, choices: choicesDetails,
-            currentWeekDisplay: targetWeekDisplay, currentWeekStartDate: targetWeekStartDateString,
-            prevWeekLink: `/admin/users/${userId}/votes?week=${formatDateToYYYYMMDD(prevWeekStartObj)}`,
-            nextWeekLink: nextWeekStartObj <= todayForComparison ? `/admin/users/${userId}/votes?week=${formatDateToYYYYMMDD(nextWeekStartObj)}` : null,
+            title: `Odabiri za ${user.username}`, 
+            userName: user.username, 
+            choices: choicesDetails,
+            currentWeekDisplay: targetWeekDisplay, 
+            currentWeekStartDate: targetWeekStartDateString,
+            prevWeekLink,
+            nextWeekLink 
             
         });
     } catch (error) { 
-        console.error(`[GET /admin/users/${userId}/votes] Greška:`, error.stack);
-        res.status(500).render('partials/error_page', { statusCode: 500, message: 'Greška prilikom dohvaćanja glasova korisnika.', title: 'Greška Servera'});
+        console.error(`[GET /admin/users/${userId}/votes] Greška za tjedan ${targetWeekStartDateString}:`, error.stack);
+        res.status(500).render('partials/error_page', { 
+            statusCode: 500, 
+            message: 'Greška prilikom dohvaćanja glasova korisnika.', 
+            title: 'Greška Servera'
+        });
     }
 });
 
