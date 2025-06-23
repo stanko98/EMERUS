@@ -463,6 +463,7 @@ router.get('/menu/edit/:dayKey', async (req, res) => {
 
 router.post('/menu/edit/:dayKey', async (req, res) => {
     console.log(`[POST /admin/menu/edit/${req.params.dayKey}] Spremanje izmjena u template.`);
+    //console.log('Primljeno tijelo zahtjeva (req.body):', JSON.stringify(req.body, null, 2));
     try {
         const { dayKey } = req.params;
         const {
@@ -471,12 +472,26 @@ router.post('/menu/edit/:dayKey', async (req, res) => {
         } = req.body;
         const hasTwoOptionsBool = !!has_two_options;
         const noOfferTodayBool = !!no_offer_today;
+
+        // Logiranje vrijednosti prije prosljeđivanja u DB funkciju
+        //console.log('--- Vrijednosti za spremanje ---');
+        //console.log('dayKey:', dayKey);
+        //console.log('day_name_display:', day_name_display ? day_name_display.trim() : null);
+        //console.log('meal_1_description (za DB):', noOfferTodayBool ? "" : (meal_1_description || "").trim());
+        //console.log('hasTwoOptionsBool (za DB):', noOfferTodayBool ? false : hasTwoOptionsBool);
+        //console.log('meal_2_description (iz forme):', meal_2_description); // <<<< VAŽAN LOG
+        //console.log('meal_2_description (za DB):', noOfferTodayBool ? "" : (hasTwoOptionsBool ? (meal_2_description || "").trim() : null));
+        //console.log('option_2_prompt (za DB):', noOfferTodayBool ? "" : (hasTwoOptionsBool ? (option_2_prompt || "").trim() : null));
+        //console.log('noOfferTodayBool (za DB):', noOfferTodayBool);
+        //console.log('-----------------------------');
+
+        
         await upsertDailyMenuTemplate( 
             dayKey, day_name_display.trim(), 
             
             noOfferTodayBool ? "" : (meal_1_description || "").trim(),
-            noOfferTodayBool ? false : hasTwoOptionsBool, 
             noOfferTodayBool ? "" : (hasTwoOptionsBool ? (meal_2_description || "").trim() : null),
+            noOfferTodayBool ? false : hasTwoOptionsBool, 
             noOfferTodayBool ? "" : (hasTwoOptionsBool ? (option_2_prompt || "").trim() : null),
             noOfferTodayBool 
         );

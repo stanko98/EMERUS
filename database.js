@@ -176,6 +176,9 @@ async function getSingleDayMenuTemplate(dayKey) {
 
 async function upsertDailyMenuTemplate(dayKey, dayNameDisplay, meal1, meal2, hasTwoOptions, option2Prompt, noOfferToday) {
     const isNoOffer = !!noOfferToday;
+
+    //console.log(`UPSERT - dayKey: ${dayKey}, meal1: ${meal1}, meal2: ${meal2}, hasTwoOptions: ${hasTwoOptions}, noOffer: ${isNoOffer}`);
+
     const sql = `
         INSERT INTO daily_menus (day_key, day_name_display, 
                                  meal_1_description, has_two_options, meal_2_description, 
@@ -199,6 +202,7 @@ async function upsertDailyMenuTemplate(dayKey, dayNameDisplay, meal1, meal2, has
             isNoOffer ? null : (!!hasTwoOptions ? option2Prompt : null),
             isNoOffer
         ]); 
+        //console.log("Vraćeno iz upsertDailyMenuTemplate:", rows[0]);
         return rows[0];
     } catch (err) { console.error('Error in upsertDailyMenuTemplate:', err.message, err.stack); throw err; }
 }
