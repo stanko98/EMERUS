@@ -204,7 +204,7 @@ app.use((req, res, next) => {
 });
 
 // Pokretanje servera
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     if (isProduction) {
         console.log(`Server je pokrenut i sluša na portu ${PORT}`);
     } else {
