@@ -20,6 +20,7 @@ const {
     clearWeeklyMenuTemplate,  
     publishMenuForWeek,
     getDetailedChoicesForWeekExport, 
+    getArchivedMenuForWeek,
     DAY_DISPLAY_NAMES,
      getMenuTemplate
 } = require('../database');
@@ -203,113 +204,96 @@ router.get('/export-choices/excel', async (req, res) => {
     const weekEndDateObj = new Date(weekStartDateObj);
     weekEndDateObj.setDate(weekStartDateObj.getDate() + 4);
     const weekDisplay = `${formatDateToDDMMYYYY(weekStartDateObj)} - ${formatDateToDDMMYYYY(weekEndDateObj)}`;
-
     const dateForFilename = formatDateToDDMMYYYY(weekStartDateObj).replace(/\.$/, '');
 
-    console.log(`[GET /admin/export-choices/excel] Exportiranje odabira za tjedan: ${weekDisplay} (pivotirano)`);
+    console.log(`[GET /admin/export-choices/excel] Exportiranje odabira za tjedan: ${weekDisplay}`);
 
     try {
-        const allChoicesForWeek = await getDetailedChoicesForWeekExport(weekStartDateString); 
-        const menuTemplate = await getMenuTemplate(); 
+        const allChoicesForWeek = await getDetailedChoicesForWeekExport(weekStartDateString);
+        const menuForWeek = await getArchivedMenuForWeek(weekStartDateString);
+        
+        if (!menuForWeek) {
+            console.error(`[EXPORT] Kritična greška: Nije pronađen arhivirani jelovnik za tjedan ${weekStartDateString}. Export prekinut.`);
+            return res.status(404).send(`Jelovnik za tjedan ${weekStartDateString} nije pronađen u arhivi.`);
+        }
 
         const workbook = new excel.Workbook();
         const worksheet = workbook.addWorksheet(`Odabiri ${weekStartDateString}`);
 
-        
-        worksheet.getColumn('A').width = 35; 
-        worksheet.getColumn('B').width = 35; 
+        worksheet.getColumn('A').width = 50;
+        worksheet.getColumn('B').width = 50;
 
-        
         worksheet.addRow([`Popis Odabira Jela za Tjedan: ${weekDisplay}`]);
+        const titleCell = worksheet.getCell('A1');
+        titleCell.font = { bold: true, size: 16, name: 'Calibri' };
+        titleCell.alignment = { horizontal: 'center' };
         worksheet.mergeCells('A1:B1');
-        worksheet.getCell('A1').font = { bold: true, size: 16, name: 'Calibri' };
-        worksheet.getCell('A1').alignment = { horizontal: 'center' };
-        worksheet.addRow([]); 
-
         
+        worksheet.addRow([]);
+
         const choicesGrouped = {};
         DAYS_OF_WEEK_ORDER.forEach((dayKey, index) => {
             const dayNumeric = index + 1;
+            const dayMenuData = menuForWeek[dayKey]; 
+            
             choicesGrouped[dayNumeric] = {
-                dayName: (DAY_DISPLAY_NAMES && DAY_DISPLAY_NAMES[dayKey]) ? DAY_DISPLAY_NAMES[dayKey] : dayKey.toUpperCase(),
+                dayName: (dayMenuData && dayMenuData.name) || DAY_DISPLAY_NAMES[dayKey] || dayKey.toUpperCase(),
                 meal1Users: [],
                 meal2Users: [],
-                meal1Description: menuTemplate[dayKey]?.meal_1 || "N/A",
-                meal2Description: menuTemplate[dayKey]?.has_two_options ? (menuTemplate[dayKey]?.meal_2 || "N/A") : null
+                meal1Description: dayMenuData ? dayMenuData.meal_1 : "Nije objavljeno",
+                meal2Description: (dayMenuData && dayMenuData.has_two_options) ? dayMenuData.meal_2 : null
             };
         });
 
         allChoicesForWeek.forEach(choice => {
-            const dayData = choicesGrouped[choice.dayNumeric];
-            if (dayData) {
-                if (choice.chosenOption === 1) { 
-            dayData.meal1Users.push(choice.username);
-                } else if (choice.chosenOption === 2) { 
-                    dayData.meal2Users.push(choice.username);
-                }
+            if (choicesGrouped[choice.dayNumeric]) {
+                if (choice.chosenOption === 1) choicesGrouped[choice.dayNumeric].meal1Users.push(choice.username);
+                else if (choice.chosenOption === 2) choicesGrouped[choice.dayNumeric].meal2Users.push(choice.username);
             }
         });
 
-
-        
         for (const dayNumeric of Object.keys(choicesGrouped).sort((a,b) => parseInt(a) - parseInt(b))) {
             const dayData = choicesGrouped[dayNumeric];
-
             worksheet.addRow([]); 
             const dayHeaderRow = worksheet.addRow([dayData.dayName]);
             worksheet.mergeCells(dayHeaderRow.number, 1, dayHeaderRow.number, 2);
             dayHeaderRow.getCell(1).font = { bold: true, size: 14, name: 'Calibri', color: { argb: 'FF0070C0' } }; 
             dayHeaderRow.getCell(1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FFDAEEF3'} }; 
             dayHeaderRow.getCell(1).alignment = { horizontal: 'center' };
-
-            
-            const mealHeaders = [`Jelo 1: ${dayData.meal1Description}`];
-            if (dayData.meal2Description !== null) { 
-                mealHeaders.push(`Jelo 2: ${dayData.meal2Description}`);
-            } else {
-                mealHeaders.push(""); 
-            }
-            const mealHeaderRow = worksheet.addRow(mealHeaders);
-            mealHeaderRow.font = { bold: true, name: 'Calibri' };
-            mealHeaderRow.getCell(1).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FFE6E6E6'} }; 
-            if (dayData.meal2Description !== null) {
-                mealHeaderRow.getCell(2).fill = { type: 'pattern', pattern:'solid', fgColor:{argb:'FFE6E6E6'} };
-            }
-
-
-            
+            const meal1Count = dayData.meal1Users.length;
+            const meal2Count = dayData.meal2Users.length;
+            const meal1HeaderText = `[${meal1Count}] Jelo 1: ${dayData.meal1Description || 'N/A'}`;
+            let meal2HeaderText = "";
+            if (dayData.meal2Description !== null) { meal2HeaderText = `[${meal2Count}] Jelo 2: ${dayData.meal2Description || 'N/A'}`; }
+            const mealHeaderRow = worksheet.addRow([meal1HeaderText, meal2HeaderText]);
+            const headerCellStyle = { font: { bold: true, size: 13, name: 'Calibri' }, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFD966' } }, alignment: { horizontal: 'center', vertical: 'middle', wrapText: true }, border: { bottom: { style: 'medium', color: { argb: 'FF000000' } } } };
+            mealHeaderRow.getCell(1).style = headerCellStyle;
+            if (dayData.meal2Description !== null) { mealHeaderRow.getCell(2).style = headerCellStyle; }
+            else { worksheet.mergeCells(mealHeaderRow.number, 1, mealHeaderRow.number, 2); }
+            mealHeaderRow.height = 30;
             const maxUsers = Math.max(dayData.meal1Users.length, dayData.meal2Users.length);
-            if (maxUsers === 0 && (dayData.meal1Description !== "N/A" || dayData.meal2Description !== "N/A" )) {
-                 worksheet.addRow(["Nema odabira za Jelo 1", dayData.meal2Description !== null ? "Nema odabira za Jelo 2" : ""]);
-            } else {
+            if (maxUsers === 0 && dayData.meal1Description !== "Nije objavljeno") { worksheet.addRow(["Nema odabira", ""]); } 
+            else {
                 for (let i = 0; i < maxUsers; i++) {
                     const userForMeal1 = dayData.meal1Users[i] || ""; 
                     let userForMeal2 = "";
-                    if (dayData.meal2Description !== null) { 
-                         userForMeal2 = dayData.meal2Users[i] || "";
-                    }
+                    if (dayData.meal2Description !== null) { userForMeal2 = dayData.meal2Users[i] || ""; }
                     worksheet.addRow([userForMeal1, userForMeal2]);
                 }
             }
         }
-        
-        if (allChoicesForWeek.length === 0) {
-            worksheet.addRow([]);
-            worksheet.addRow(["Nema zabilježenih odabira za ovaj tjedan."]);
-            worksheet.mergeCells(worksheet.lastRow.number, 1, worksheet.lastRow.number, 2);
-        }
 
-        
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="odabiri_jela_${dateForFilename}.xlsx"`);
-
         await workbook.xlsx.write(res);
         res.end();
-        console.log(`[GET /admin/export-choices/excel] Pivotirana Excel datoteka generirana i poslana.`);
+        console.log(`[GET /admin/export-choices/excel] Pivotirana Excel datoteka (s povijesnim jelovnikom) generirana i poslana.`);
 
     } catch (error) {
         console.error('[GET /admin/export-choices/excel] Greška pri generiranju pivotirane Excel datoteke:', error.stack);
-        res.status(500).send('Greška pri generiranju Excel datoteke.');
+        if (!res.headersSent) {
+            res.status(500).send('Greška pri generiranju Excel datoteke. Provjerite konzolu servera za detalje.');
+        }
     }
 });
 
