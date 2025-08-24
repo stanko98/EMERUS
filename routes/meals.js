@@ -57,14 +57,10 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
             isTargetMenuPublished = false;
         }
         
-        let userChoices = {};
+        const userChoices = await getUserChoicesForWeek(userId, targetWeekStartDateString);
+        
         const today = new Date();
         const startOfTodayWeek = getWeekStartDate(today);
-        
-        
-        if (targetWeekStartDate <= startOfTodayWeek) {
-            userChoices = await getUserChoicesForWeek(userId, targetWeekStartDateString);
-        }
         
         const endDateOfTargetWeek = new Date(targetWeekStartDate);
         endDateOfTargetWeek.setDate(targetWeekStartDate.getDate() + 4); 
@@ -117,25 +113,35 @@ router.post('/dashboard', isAuthenticated, async (req, res) => {
     const userId = req.session.user.id;
     const choicesFromForm = req.body.choices || {}; 
     
-    let weekOfChoicesString = null;
     const formDates = Object.keys(choicesFromForm);
+    let weekOfChoicesString;
 
     if (formDates.length > 0) {
-        
         weekOfChoicesString = formatDateToYYYYMMDD(getWeekStartDate(new Date(formDates[0] + "T00:00:00Z")));
     } else {
-        
-        weekOfChoicesString = formatDateToYYYYMMDD(getWeekStartDate(new Date()));
+        // Ako forma dođe prazna, moramo znati na koji tjedan se odnosi.
+        // U EJS formi ćemo dodati hidden input s podatkom o tjednu.
+        // Za sada, fallback:
+        weekOfChoicesString = req.body.week_of_choices || formatDateToYYYYMMDD(getWeekStartDate(new Date()));
     }
 
+    // --- AŽURIRANA LOGIKA VALIDACIJE ---
     const today = new Date();
-    const startOfCurrentWeekString = formatDateToYYYYMMDD(getWeekStartDate(today));
-    if (weekOfChoicesString !== startOfCurrentWeekString) {
-        console.warn(`[POST /dashboard] Pokušaj spremanja odabira za tjedan (${weekOfChoicesString}) koji nije tekući. Akcija nije dozvoljena.`);
-        return res.redirect(`/dashboard?week=${weekOfChoicesString}&error=` + encodeURIComponent('Odabiri se mogu spremiti samo za tekući tjedan.'));
+    const startOfCurrentWeekObj = getWeekStartDate(today);
+    const startOfCurrentWeekString = formatDateToYYYYMMDD(startOfCurrentWeekObj);
+    
+    const startOfNextWeekObj = new Date(startOfCurrentWeekObj);
+    startOfNextWeekObj.setDate(startOfCurrentWeekObj.getDate() + 7);
+    const startOfNextWeekString = formatDateToYYYYMMDD(startOfNextWeekObj);
+
+    // Dopusti spremanje samo ako je tjedan iz forme TEKUĆI ili SLJEDEĆI
+    if (weekOfChoicesString !== startOfCurrentWeekString && weekOfChoicesString !== startOfNextWeekString) {
+        console.warn(`[POST /dashboard] Pokušaj spremanja odabira za nedozvoljeni tjedan (${weekOfChoicesString}). Akcija nije dozvoljena.`);
+        return res.redirect(`/dashboard?week=${weekOfChoicesString}&error=` + encodeURIComponent('Odabiri se mogu spremiti samo za tekući i sljedeći tjedan.'));
     }
 
-    console.log('[POST /dashboard] Spremanje odabira za tekući tjedan:', weekOfChoicesString, 'Podaci forme:', choicesFromForm);
+    console.log('[POST /dashboard] Spremanje odabira za tjedan:', weekOfChoicesString, 'Podaci forme:', choicesFromForm);
+    
     try {
         const workDaysRelevantForForm = getWorkWeekDaysForDate(new Date(weekOfChoicesString + "T00:00:00Z"));
 
@@ -149,32 +155,8 @@ router.post('/dashboard', isAuthenticated, async (req, res) => {
     } catch (error) {
         console.error("[POST /dashboard] Error saving meal preferences:", error.stack);
         
-        const userChoices = await getUserChoicesForWeek(userId, weekOfChoicesString);
-        const workWeekDaysForDisplay = getWorkWeekDaysForDate(new Date(weekOfChoicesString + "T00:00:00Z"));
-        const displayWeekStart = new Date(weekOfChoicesString + "T00:00:00Z");
-        const displayWeekEnd = new Date(displayWeekStart);
-        displayWeekEnd.setDate(displayWeekStart.getDate() + 4);
-        
-        const prevWeekStartObjOnError = new Date(displayWeekStart);
-        prevWeekStartObjOnError.setDate(prevWeekStartObjOnError.getDate() - 7);
-        const nextWeekStartObjOnError = new Date(displayWeekStart);
-        nextWeekStartObjOnError.setDate(nextWeekStartObjOnError.getDate() + 7);
-
-        res.render('dashboard', {
-            userChoices,
-            workWeekDays: workWeekDaysForDisplay,
-            message: 'Greška pri spremanju odabira. Molimo pokušajte ponovno.',
-            error: true,
-            currentWeekDisplay: `${weekOfChoicesString} - ${formatDateToYYYYMMDD(displayWeekEnd)}`,
-            isCurrentWeek: true, 
-            isFutureWeek: false,
-            prevWeekLink: `/dashboard?week=${formatDateToYYYYMMDD(prevWeekStartObjOnError)}`,
-            nextWeekLink: `/dashboard?week=${formatDateToYYYYMMDD(nextWeekStartObjOnError)}`,
-            DAY_DISPLAY_NAMES: DAY_DISPLAY_NAMES,
-            daysOrder: res.locals.daysOrder,
-            displayedMenu: res.locals.weeklyMenu, 
-            isMenuPublished: false 
-        });
+        // Fallback u slučaju greške ostaje uglavnom isti
+        return res.redirect(`/dashboard?week=${weekOfChoicesString}&error=` + encodeURIComponent('Greška pri spremanju odabira. Molimo pokušajte ponovno.'));
     }
 });
 
