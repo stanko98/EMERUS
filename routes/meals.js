@@ -26,20 +26,29 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
         let targetReferenceDate;
 
         if (weekQuery && /^\d{4}-\d{2}-\d{2}$/.test(weekQuery)) {
+            // Ako korisnik EKSPLICITNO traži tjedan (npr. klikom na "Prethodni"), koristi taj tjedan.
             try {
                 targetReferenceDate = new Date(weekQuery + "T00:00:00Z");
                 if (isNaN(targetReferenceDate.getTime())) {
-                    console.warn(`[GET /dashboard] Neispravan 'week' query parametar (invalid date: ${weekQuery}), koristim tekući datum.`);
-                    targetReferenceDate = new Date();
+                    // Ako je datum neispravan, preusmjeri na default (idući tjedan)
+                    const today = new Date();
+                    const nextWeek = new Date(today.setDate(today.getDate() + 7));
+                    return res.redirect(`/dashboard?week=${formatDateToYYYYMMDD(getWeekStartDate(nextWeek))}`);
                 }
             } catch (e) {
-                console.warn(`[GET /dashboard] Greška pri parsiranju 'week' query parametra (${weekQuery}), koristim tekući datum:`, e);
-                targetReferenceDate = new Date();
+                 const today = new Date();
+                 const nextWeek = new Date(today.setDate(today.getDate() + 7));
+                 return res.redirect(`/dashboard?week=${formatDateToYYYYMMDD(getWeekStartDate(nextWeek))}`);
             }
         } else {
-            targetReferenceDate = new Date();
+            // *** GLAVNA PROMJENA OVDJE ***
+            // Ako korisnik NIJE specificirao tjedan (npr. nakon prijave), zadani tjedan je SLJEDEĆI.
+            const today = new Date();
+            const nextWeek = new Date(today.setDate(today.getDate() + 7));
+            targetReferenceDate = nextWeek; // Postavi referentni datum na tjedan dana od danas
+
             if (weekQuery) {
-                 console.warn(`[GET /dashboard] Neispravan format 'week' query parametra (${weekQuery}), koristim tekući datum.`);
+                 console.warn(`[GET /dashboard] Neispravan format 'week' (${weekQuery}), koristim IDUĆI tjedan kao zadani.`);
             }
         }
 
