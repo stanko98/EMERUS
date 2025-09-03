@@ -403,14 +403,7 @@ router.get('/users/:userId/votes', async (req, res) => {
 
         const nextWeekStartObj = new Date(currentTargetWeekStartObj);
         nextWeekStartObj.setDate(currentTargetWeekStartObj.getDate() + 7); 
-        
-        const today = new Date();
-        const startOfTodayCalendarWeek = getWeekStartDate(today); 
-
-        let nextWeekLink = null;
-        if (currentTargetWeekStartObj.getTime() < startOfTodayCalendarWeek.getTime()) {
-            nextWeekLink = `/admin/users/${userId}/votes?week=${formatDateToYYYYMMDD(nextWeekStartObj)}`;
-        }
+        const nextWeekLink = `/admin/users/${userId}/votes?week=${formatDateToYYYYMMDD(nextWeekStartObj)}`;
         
         res.render('admin/user_votes', {
             title: `Odabiri za ${user.username}`, 
