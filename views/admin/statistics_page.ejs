@@ -33,7 +33,7 @@
           <% daysOrder.forEach((dayKey, index) => { %>
               <% const dayOfWeekNumeric = index + 1; %>
               <% const dayStats = detailedVoteCounts[dayOfWeekNumeric]; %>
-              <% const dayMenuInfo = locals.weeklyMenu[dayKey] || {}; %>
+              <% const dayMenuInfo = (menuForSelectedWeek && menuForSelectedWeek[dayKey]) ? menuForSelectedWeek[dayKey] : {}; %>
               
               <% if (dayStats) { %>
                   <div class="day-stat-card" style="border: 1px solid #ddd; padding: 10px 15px; border-radius: 8px; background-color: #fff;">

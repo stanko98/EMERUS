@@ -164,6 +164,8 @@ router.get('/statistics', async (req, res) => {
         const mealPopularityForSelectedWeek = await getMealPopularityStats(selectedWeekStartDateString);
         const overallMealPopularity = await getMealPopularityStats(); 
 
+        const menuForSelectedWeek = await getArchivedMenuForWeek(selectedWeekStartDateString);
+
         console.log(`[GET /admin/statistics] Prikazujem statistiku za tjedan: ${selectedWeekStartDateString}`);
         
         res.render('admin/statistics_page', { 
@@ -177,6 +179,7 @@ router.get('/statistics', async (req, res) => {
             currentWeekStartDateForLinks: selectedWeekStartDateString, 
             daysOrder: res.locals.daysOrder, 
             // weeklyMenu: res.locals.weeklyMenu, // Dostupno preko res.locals
+            menuForSelectedWeek: menuForSelectedWeek,
             message: req.query.message, 
             error: req.query.error
         });
