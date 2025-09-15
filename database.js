@@ -74,6 +74,15 @@ async function initializeDatabase() {
                 CONSTRAINT unique_user_weekly_daily_choice UNIQUE (user_id, week_start_date, day_of_week_numeric)
             );
         `);
+        try {
+            await client.query(`
+                ALTER TABLE user_daily_choices 
+                ADD COLUMN IF NOT EXISTS is_second_shift BOOLEAN NOT NULL DEFAULT FALSE;
+            `);
+            console.log('Column "is_second_shift" checked/created in "user_daily_choices".');
+        } catch(err) {
+            console.warn('Could not add "is_second_shift" column, it might already exist with different constraints:', err.message);
+        }
         console.log('Table "user_daily_choices" checked/created.');
         
         await client.query(`CREATE INDEX IF NOT EXISTS idx_user_daily_choices_week_day ON user_daily_choices (week_start_date, day_of_week_numeric);`);
@@ -297,7 +306,7 @@ async function publishMenuForWeek(weekStartDateString) {
 }
 
 // --- MEAL CHOICE FUNCTIONS ---
-async function saveUserDailyChoice(userId, dateString, chosenOptionString) {
+async function saveUserDailyChoice(userId, dateString, chosenOptionString, isSecondShift = false) {
     const option = parseInt(chosenOptionString);
     const actualDate = new Date(dateString + "T00:00:00Z");
     const weekStartDateObject = getWeekStartDate(actualDate);
@@ -341,12 +350,12 @@ async function saveUserDailyChoice(userId, dateString, chosenOptionString) {
             if (!chosenMealDesc) chosenMealDesc = `Jelo ${option}`;
 
             const sql = `
-                INSERT INTO user_daily_choices (user_id, week_start_date, day_of_week_numeric, chosen_option, chosen_meal_description)
-                VALUES ($1, $2, $3, $4, $5)
+                INSERT INTO user_daily_choices (user_id, week_start_date, day_of_week_numeric, chosen_option, chosen_meal_description, is_second_shift)
+                VALUES ($1, $2, $3, $4, $5, $6)
                 ON CONFLICT(user_id, week_start_date, day_of_week_numeric) DO UPDATE SET
-                    chosen_option = EXCLUDED.chosen_option, chosen_meal_description = EXCLUDED.chosen_meal_description;
+                    chosen_option = EXCLUDED.chosen_option, chosen_meal_description = EXCLUDED.chosen_meal_description, is_second_shift = EXCLUDED.is_second_shift;
             `;
-            const result = await pool.query(sql, [userId, weekStartDateFormatted, dayOfWeekNumeric, option, chosenMealDesc]);
+            const result = await pool.query(sql, [userId, weekStartDateFormatted, dayOfWeekNumeric, option, chosenMealDesc, !!isSecondShift]);
             return { changes: result.rowCount };
         } else {
             const sql = `DELETE FROM user_daily_choices WHERE user_id = $1 AND week_start_date = $2 AND day_of_week_numeric = $3;`;
@@ -357,13 +366,13 @@ async function saveUserDailyChoice(userId, dateString, chosenOptionString) {
 }
 
 async function getUserChoicesForWeek(userId, weekStartDateString) {
-    const sql = "SELECT day_of_week_numeric, chosen_option, chosen_meal_description FROM user_daily_choices WHERE user_id = $1 AND week_start_date = $2";
+    const sql = "SELECT day_of_week_numeric, chosen_option, chosen_meal_description, is_second_shift FROM user_daily_choices WHERE user_id = $1 AND week_start_date = $2";
     try {
         const { rows } = await pool.query(sql, [userId, weekStartDateString]);
         const choices = {};
-        for (let i = 1; i <= 5; i++) { choices[i] = { option: null, description: null }; }
+        for (let i = 1; i <= 5; i++) { choices[i] = { option: null, description: null, isSecondShift: false }; }
         rows.forEach(row => { 
-            choices[row.day_of_week_numeric] = { option: row.chosen_option, description: row.chosen_meal_description };
+            choices[row.day_of_week_numeric] = { option: row.chosen_option, description: row.chosen_meal_description, isSecondShift: !!row.is_second_shift };
         });
         return choices;
     } catch (err) { 
@@ -447,14 +456,17 @@ async function getVoteCountsByDayAndOptionForWeek(weekStartDateString) {
 }
 async function getUsersWhoChoseOptionOnDate(weekStartDateString, dayOfWeekNumeric, optionNumber) {
     const sql = `
-        SELECT u.username FROM user_daily_choices udc
+        SELECT u.username, udc.is_second_shift FROM user_daily_choices udc
         JOIN users u ON udc.user_id = u.id
         WHERE udc.week_start_date = $1 AND udc.day_of_week_numeric = $2 AND udc.chosen_option = $3 
         ORDER BY u.username ASC;
     `;
     try {
         const { rows } = await pool.query(sql, [weekStartDateString, dayOfWeekNumeric, parseInt(optionNumber)]);
-        return rows.map(row => row.username);
+        return rows.map(row => ({
+            username: row.username,
+            isSecondShift: !!row.is_second_shift
+        }));
     } catch (err) { console.error('Error in getUsersWhoChoseOptionOnDate:', err.message); throw err; }
 }
 async function getMealPopularityStats(weekStartDateString = null) {
@@ -489,6 +501,7 @@ async function getDetailedChoicesForWeekExport(weekStartDateString) {
             u.username,
             udc.week_start_date, 
             udc.day_of_week_numeric,
+            udc.is_second_shift,
             dm_template.day_name_display,
             udc.chosen_option,
             udc.chosen_meal_description
@@ -510,7 +523,8 @@ async function getDetailedChoicesForWeekExport(weekStartDateString) {
             dayName: row.day_name_display || (DAY_DISPLAY_NAMES[DAYS_OF_WEEK_ORDER[row.day_of_week_numeric-1]] || `Dan ${row.day_of_week_numeric}`),
             dayNumeric: row.day_of_week_numeric,
             chosenOption: row.chosen_option, 
-            chosenMealDescription: row.chosen_meal_description || `Jelo ${row.chosen_option} - opis nije spremljen` 
+            chosenMealDescription: row.chosen_meal_description || `Jelo ${row.chosen_option} - opis nije spremljen`,
+            isSecondShift: !!row.is_second_shift
         }));
     } catch (err) {
         console.error('Error in getDetailedChoicesForWeekExport:', err.message); 

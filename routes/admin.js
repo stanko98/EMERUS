@@ -249,9 +249,16 @@ router.get('/export-choices/excel', async (req, res) => {
         });
 
         allChoicesForWeek.forEach(choice => {
+            const userDisplay = choice.isSecondShift
+                ? `${choice.username} (2. smjena)`
+                : choice.username;
+
             if (choicesGrouped[choice.dayNumeric]) {
-                if (choice.chosenOption === 1) choicesGrouped[choice.dayNumeric].meal1Users.push(choice.username);
-                else if (choice.chosenOption === 2) choicesGrouped[choice.dayNumeric].meal2Users.push(choice.username);
+                if (choice.chosenOption === 1) { 
+                    choicesGrouped[choice.dayNumeric].meal1Users.push(userDisplay);
+                } else if (choice.chosenOption === 2) { 
+                    choicesGrouped[choice.dayNumeric].meal2Users.push(userDisplay);
+                }
             }
         });
 
@@ -378,15 +385,19 @@ router.get('/users/:userId/votes', async (req, res) => {
             const dayMenu = weeklyMenuTemplate[dayKey] || { name: (DAY_DISPLAY_NAMES[dayKey] || dayKey.toUpperCase()), meal_1: null, has_two_options: false, meal_2: null};
             const userChoiceForDay = userChoices[dayOfWeekNumeric]; 
             let chosenMealDescription = "Ništa nije odabrano";
+            let shiftInfo = '';
 
-            if (userChoiceForDay && userChoiceForDay.option === 1) {
+            if (userChoiceForDay && userChoiceForDay.option) {
+                if (userChoiceForDay.option === 1) {
                 chosenMealDescription = `Jelo 1: ${userChoiceForDay.description || dayMenu.meal_1 || 'N/A'}`;
-            } else if (userChoiceForDay && userChoiceForDay.option === 2) {
-                
+            } else if (userChoiceForDay.option === 2) {
                 const meal2DescFromTemplate = dayMenu.has_two_options ? (dayMenu.meal_2 || 'N/A') : 'N/A (Jelo 2 nije bilo opcija)';
                 chosenMealDescription = `Jelo 2: ${userChoiceForDay.description || meal2DescFromTemplate}`;
             }
-            
+            if (userChoiceForDay.isSecondShift) {
+            shiftInfo = '<span style="font-weight: bold; color: #c0392b;">(2. smjena)</span>';
+            }
+        }
             let dayDisplayName = dayKey.toUpperCase();
             if (dayMenu && dayMenu.name && dayMenu.name !== "Nije definirano") {
                 dayDisplayName = dayMenu.name;
@@ -394,7 +405,7 @@ router.get('/users/:userId/votes', async (req, res) => {
                 dayDisplayName = DAY_DISPLAY_NAMES[dayKey];
             }
 
-            return { dayName: dayDisplayName, chosenMealDescription: chosenMealDescription };
+            return { dayName: dayDisplayName, chosenMealDescription: chosenMealDescription, shiftInfo: shiftInfo };
         });
 
         

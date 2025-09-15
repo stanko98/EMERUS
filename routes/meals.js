@@ -98,7 +98,8 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
             isFutureWeek: isFutureWeek, 
             displayedMenu: displayedMenu,       
             isMenuPublished: isTargetMenuPublished, 
-            DAY_DISPLAY_NAMES: DAY_DISPLAY_NAMES, 
+            DAY_DISPLAY_NAMES: DAY_DISPLAY_NAMES,
+            weekForForm: targetWeekStartDateString, 
             message: req.query.message,
             error: req.query.error,
             formatDateToDDMMYYYY: formatDateToDDMMYYYY, 
@@ -122,16 +123,11 @@ router.post('/dashboard', isAuthenticated, async (req, res) => {
     const userId = req.session.user.id;
     const choicesFromForm = req.body.choices || {}; 
     
-    const formDates = Object.keys(choicesFromForm);
-    let weekOfChoicesString;
+    const weekOfChoicesString = req.body.week_of_choices;
 
-    if (formDates.length > 0) {
-        weekOfChoicesString = formatDateToYYYYMMDD(getWeekStartDate(new Date(formDates[0] + "T00:00:00Z")));
-    } else {
-        // Ako forma dođe prazna, moramo znati na koji tjedan se odnosi.
-        // U EJS formi ćemo dodati hidden input s podatkom o tjednu.
-        // Za sada, fallback:
-        weekOfChoicesString = req.body.week_of_choices || formatDateToYYYYMMDD(getWeekStartDate(new Date()));
+    if (!weekOfChoicesString) {
+        console.error("[POST /dashboard] Kritična greška: week_of_choices nedostaje u formi.");
+        return res.redirect('/dashboard?error=' + encodeURIComponent('Došlo je do greške, tjedan nije specificiran.'));
     }
 
     // --- AŽURIRANA LOGIKA VALIDACIJE ---
@@ -154,10 +150,12 @@ router.post('/dashboard', isAuthenticated, async (req, res) => {
     try {
         const workDaysRelevantForForm = getWorkWeekDaysForDate(new Date(weekOfChoicesString + "T00:00:00Z"));
 
+        const shiftsFromForm = req.body.shifts || {};
         for (const dayInfo of workDaysRelevantForForm) {
-            const dateString = dayInfo.dateString; 
-            const chosenOptionForDay = choicesFromForm[dateString]; 
-            await saveUserDailyChoice(userId, dateString, chosenOptionForDay);
+            const dateString = dayInfo.dateString;
+            const chosenOptionForDay = choicesFromForm[dateString];
+            const isSecondShift = !!shiftsFromForm[dateString];
+            await saveUserDailyChoice(userId, dateString, chosenOptionForDay, isSecondShift);
         }
         
         res.redirect(`/dashboard?week=${weekOfChoicesString}&message=` + encodeURIComponent('Odabiri uspješno spremljeni!'));

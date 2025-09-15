@@ -35,6 +35,9 @@
                         <td style="border: 1px solid #ddd; padding: 10px; vertical-align: top;"><strong><%= choiceDetail.dayName %></strong></td>
                         <td style="border: 1px solid #ddd; padding: 10px; vertical-align: top;">
                             <%= choiceDetail.chosenMealDescription %>
+                            <% if (choiceDetail.shiftInfo) { %>
+                                <%- choiceDetail.shiftInfo %>
+                            <% } %>
                         </td>
                     </tr>
                 <% }); %>

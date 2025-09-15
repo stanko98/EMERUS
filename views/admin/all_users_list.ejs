@@ -36,10 +36,9 @@
                 <tbody>
                     <% allUsersList.forEach(userFromList => { %>
                         <tr>
-                            <td><%= userFromList.username %></td>
-                            <td><%= userFromList.is_admin ? 'DA' : 'NE' %></td>
-                            <td>
-                                <!-- Link "Vidi Glasove" sada uključuje currentWeekStartDateString kao query parametar -->
+                            <td data-label="Korisničko ime"><%= userFromList.username %></td>
+                            <td data-label="Admin Status"><%= userFromList.is_admin ? 'DA' : 'NE' %></td>
+                            <td data-label="Akcije">
                                 <a href="/admin/users/<%= userFromList.id %>/votes?week=<%= currentWeekStartDateString %>" class="button-small">Vidi Glasove</a>
                                 
                                 <% if (!userFromList.is_admin && userFromList.id !== locals.user.id) { %>
@@ -81,6 +80,52 @@
         width: 100%;
         border-collapse: collapse;
          }
+    @media (max-width: 768px) {
+    .search-form-container form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .search-form-container input[type="text"] {
+        width: 100%;
+        box-sizing: border-box; 
+    }
+    .users-table thead {
+        display: none; 
+    }
+    .users-table tr {
+        display: block; 
+        margin-bottom: 15px;
+        border: 1px solid var(--border-color, #ddd);
+        border-radius: var(--border-radius-md, 8px);
+        padding: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .users-table td {
+        display: block; 
+        text-align: right;
+        border: none;
+        border-bottom: 1px dotted #ccc;
+        padding: 8px 5px;
+        padding-left: 50%;
+        position: relative;
+    }
+    .users-table td:last-child {
+        border-bottom: none;
+    }
+    .users-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: 45%;
+        text-align: left;
+        font-weight: bold;
+        color: var(--primary-color, #333);
+    }
+    .users-table td[data-label="Akcije"] {
+        text-align: center;
+        padding-top: 15px;
+    }
+}
 </style>
 
 <%- include('../partials/footer') %>

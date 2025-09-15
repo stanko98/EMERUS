@@ -7,8 +7,13 @@
     <% if (voters && voters.length > 0) { %>
         <p style="margin-bottom: 15px;">Popis korisnika koji su odabrali <strong>Jelo <%= optionNumber %></strong> za dan <strong><%= dayName %></strong> (tjedan koji počinje <%= formatDateToDDMMYYYY(new Date(weekStartDate + "T00:00:00Z")) %>):</p>
         <ul class="voters-list" style="list-style-type: decimal; padding-left: 25px; margin-bottom: 20px;">
-            <% voters.forEach(username => { %>
-                <li style="margin-bottom: 5px; font-size: 1rem;"><%= username %></li>
+            <% voters.forEach(voter => { %>
+                <li style="margin-bottom: 5px; font-size: 1rem;">
+                    <%= voter.username %>
+                    <% if (voter.isSecondShift) { %>
+                        <span style="font-weight: bold; color: #c0392b;">(2. smjena)</span>
+                    <% } %>
+                </li>
             <% }); %>
         </ul>
     <% } else { %>
