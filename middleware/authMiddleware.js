@@ -1,6 +1,6 @@
 function isAuthenticated(req, res, next) {
     if (!req.session.user) {
-        return res.redirect('/login?message=Please login to continue');
+        return res.redirect('/login?message=Prijavite se za nastavak');
     }
     next();
 }
