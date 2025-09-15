@@ -81,11 +81,32 @@
                     <% if (isFutureWeek && !isMenuPublished) { %><p class="admin-info-italic futura-week-message">Jelovnik za ovaj dan još nije dostupan.</p><% } %>
                     <% if (isCurrentWeek && !isMenuPublished) { %><p class="admin-info-italic current-week-not-published-message">Jelovnik za ovaj dan još nije službeno objavljen.</p><% } %>
                     <% if (!isCurrentWeek && !isFutureWeek) { /* Logika za prošli tjedan... */ %>
-                        <p class="user-choice-past">
-                            Vaš odabir je bio: <strong><%= (userChoiceForThisDay && userChoiceForThisDay.description) ? userChoiceForThisDay.description : 'Niste imali odabir' %></strong>
-                            <% if (userChoiceForThisDay && userChoiceForThisDay.isSecondShift) { %>(2. smjena)<% } %>
-                        </p>
-                    <% } %>
+    
+    <%# PRVO: Prikazujemo ponuđeni jelovnik za taj dan %>
+    <% if (isMenuPublished && menuItem && menuItem.meal_1 && menuItem.meal_1.trim() !== "") { %>
+        <div class="meal-option past-week-meal" style="background-color: #f8f9fa; border: none; padding: 5px 10px;">
+            <p>Ponuđeno Jelo 1: <%- menuItem.meal_1 %></p>
+        </div>
+        <% if (menuItem.has_two_options && menuItem.meal_2 && menuItem.meal_2.trim() !== "") { %>
+            <div class="meal-option past-week-meal" style="background-color: #f8f9fa; border: none; padding: 5px 10px;">
+                <p>Ponuđeno Jelo 2: <%- menuItem.meal_2 %></p>
+            </div>
+        <% } %>
+        <hr style="margin:15px 0; border: 0; border-top: 1px solid #eee;">
+    <% } else { %>
+         <p class="admin-info-italic centered-text" style="text-align:center;">Nema podataka o jelovniku za ovaj dan.</p>
+         <hr style="margin:15px 0; border: 0; border-top: 1px solid #eee;">
+    <% } %>
+    
+    <%# DRUGO: Prikazujemo što je korisnik odabrao %>
+    <p class="user-choice-past" style="padding: 10px; background-color: #e9f5e9; border-left: 3px solid #4CAF50; border-radius: 4px; margin-top:0;">
+        Vaš odabir je bio: <strong><%= (userChoiceForThisDay && userChoiceForThisDay.description) ? userChoiceForThisDay.description : 'Niste imali odabir' %></strong>
+        <% if (userChoiceForThisDay && userChoiceForThisDay.isSecondShift) { %>
+            <span style="font-weight: bold; color: #c0392b;">(2. smjena)</span>
+        <% } %>
+    </p>
+
+<% } %>
                 <% } %>
             </div>
         <% }); %>
