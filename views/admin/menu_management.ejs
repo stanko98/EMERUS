@@ -15,28 +15,38 @@
     </form>
 </div>
 
-<div style="text-align: center; margin-top: 20px; margin-bottom:25px; padding-top:20px; border-top: 1px solid #eee;"> <a href="/admin/menu/publish" class="button button-primary" style="background-color: var(--primary-color-dark); font-size: 1.1em;"> Objavi Ovaj Template za Određeni Tjedan </a> <p class="page-description" style="font-size:0.9em; margin-top:8px;">Nakon što ste uredili template iznad, ovdje ga možete "zaključati" za specifičan tjedan.</p> </div>
+<div style="text-align: center; margin-top: 20px; margin-bottom:25px; padding-top:20px; border-top: 1px solid #eee;"> <a href="/admin/menu/publish" class="button button-primary" style="background-color: var(--primary-color-dark); font-size: 1.1em;"> Objavi Ovaj Template za Određeni Tjedan </a> <p class="page-description" style="font-size:0.9em; margin-top:8px;">Nakon što ste uredili template ispod, ovdje ga možete "zaključati" za specifičan tjedan.</p> </div>
 
 <div class="admin-menu-cards-container">
     <% daysOrder.forEach(dayKey => { %>
-        <% const menuItem = weeklyMenu[dayKey] || { name: (typeof DAY_DISPLAY_NAMES !== 'undefined' && DAY_DISPLAY_NAMES[dayKey] ? DAY_DISPLAY_NAMES[dayKey] : dayKey.charAt(0).toUpperCase() + dayKey.slice(1)), meal_1: "Nije postavljeno", has_two_options: false }; %>
-        
+        <% const menuItem = weeklyMenu[dayKey] || { name: (DAY_DISPLAY_NAMES[dayKey] || dayKey.toUpperCase()), meal_1: "Nije postavljeno", has_two_options: false, no_offer_today: false }; %>
         
         <div class="day-card admin-menu-day-card"> 
             <h3><%= menuItem.name %></h3>
-            <div class="meal-option">
-                <p><strong>1)</strong> <%- menuItem.meal_1 || "<i>Nije definirano</i>" %></p>
-            </div>
-            <% if (menuItem.has_two_options) { %>
-                <div class="meal-option">
-                    <p><strong>2)</strong> <%- menuItem.meal_2 || "<i>Nije definirano</i>" %></p>
-                </div>
-                <% if (menuItem.option_2_prompt) { %>
-                    <p class="choice-prompt" style="font-size: 0.85em;"><em>Prompt: <%= menuItem.option_2_prompt %></em></p>
-                <% } %>
+
+            <%# --- NOVA, ISPRAVLJENA LOGIKA OVDJE --- %>
+            <% if (menuItem.no_offer_today) { %>
+                <%# 1. PRVO provjeri je li "Nema ponude" aktivno %>
+                <p style="text-align: center; font-style: italic; color: #c0392b; font-weight: bold; padding: 10px; border: 1px solid #f5c6cb; background-color: #f8d7da; border-radius: 4px;">
+                    Nema ponude jela za ovaj dan.
+                </p>
             <% } else { %>
-                <p style="font-style: italic; color: #777; font-size: 0.9em; margin-top:10px;">(Samo jedna opcija jela za ovaj dan)</p>
+                <%# 2. Ako nije, izvršava se stara logika za prikaz jela %>
+                <div class="meal-option">
+                    <p><strong>1)</strong> <%- menuItem.meal_1 || "<i>Nije definirano</i>" %></p>
+                </div>
+                <% if (menuItem.has_two_options) { %>
+                    <div class="meal-option">
+                        <p><strong>2)</strong> <%- menuItem.meal_2 || "<i>Nije definirano</i>" %></p>
+                    </div>
+                    <% if (menuItem.option_2_prompt) { %>
+                        <p class="choice-prompt" style="font-size: 0.85em;"><em>Prompt: <%= menuItem.option_2_prompt %></em></p>
+                    <% } %>
+                <% } else { %>
+                    <p style="font-style: italic; color: #777; font-size: 0.9em; margin-top:10px;">(Samo jedna opcija jela za ovaj dan)</p>
+                <% } %>
             <% } %>
+            
             <div style="text-align: center; margin-top: 20px;">
                  <a href="/admin/menu/edit/<%= dayKey %>" class="button button-small">Uredi <%= menuItem.name %></a>
             </div>

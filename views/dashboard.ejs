@@ -11,8 +11,8 @@
 
 <!--OPISNE PORUKE NA VRHU -->
 <% if (isCurrentWeek) { %>
-    <% if (isMenuPublished) { %><p class="page-description">Tekući tjedan</p><% } else { %><p class="page-description" style="color: #e67e22; font-weight:bold;">Jelovnik za tekući tjedan još nije službeno objavljen.</p><% } %>
-<% } else if (isFutureWeek) { %><p class="page-description">Glasajte za idući tjedan.</p><% } else { %><p class="page-description">Prikaz vaših odabira i službeno objavljenog jelovnika za odabrani prošli tjedan.</p><% } %>
+    <% if (isMenuPublished) { %><p class="page-description" style="color: var(--primary-color); font-weight: bold;">Tekući tjedan</p><% } else { %><p class="page-description" style="color: #e67e22; font-weight:bold;">Jelovnik za tekući tjedan još nije službeno objavljen</p><% } %>
+<% } else if (isFutureWeek) { %><p class="page-description" style="color: var(--primary-color); font-weight: bold;">Glasajte za idući tjedan !!</p><% } else { %><p class="page-description" style="color: var(--primary-color); font-weight: bold;">Prikaz objavljenog jelovnika za odabrani prošli tjedan</p><% } %>
 
 <% if (typeof message !== 'undefined' && message) { %><p class="message success-message"><%= message %></p><% } %>
 <% if (typeof error !== 'undefined' && error) { %><p class="message error-message"><%= error %></p><% } %>
@@ -23,8 +23,8 @@
         <% workWeekDays.forEach((day, index) => { %>
             <%
                 const dayKey = day.dayKey;
-                const dayOfWeekNumeric = index + 1;
                 const menuItem = displayedMenu[dayKey];
+                const dayOfWeekNumeric = index + 1;
                 const userChoiceForThisDay = userChoices[dayOfWeekNumeric];
                 let dayDisplayName = (menuItem && menuItem.name) ? menuItem.name : (locals.DAY_DISPLAY_NAMES[dayKey] || dayKey.toUpperCase());
             %>
@@ -32,81 +32,38 @@
             <div class="day-card">
                 <h3><%= dayDisplayName %> (<%= formatDateToDDMMYYYY(day.date) %>)</h3>
                 
-                <% const isVotableWeek = (isCurrentWeek || isFutureWeek) && isMenuPublished; %>
-
-                <% if (isVotableWeek && menuItem && !menuItem.no_offer_today && menuItem.meal_1 && menuItem.meal_1.trim() !== "") { %>
-                    <!-- PRIKAZ RADIO GUMBA (s novim onchange eventom) -->
-                    <div class="meal-option radio-option">
-                        <input type="radio" 
-                               id="choice_<%= day.dateString %>_1" 
-                               name="choices[<%= day.dateString %>]" 
-                               value="1"
-                               onchange="handleChoiceChange('<%= day.dateString %>')"
-                               <%= (userChoiceForThisDay && userChoiceForThisDay.option === 1) ? 'checked' : '' %>>
-                        <label for="choice_<%= day.dateString %>_1"><strong>1)</strong> <%- menuItem.meal_1 %></label>
-                    </div>
-                    <% if (menuItem.has_two_options && menuItem.meal_2 && menuItem.meal_2.trim() !== "") { %>
+                <%# --- KONAČNA ISPRAVLJENA LOGIKA --- %>
+                <% if (isMenuPublished) { %>
+                    <%# A. Ako je jelovnik OBJAVLJEN za ovaj tjedan... %>
+                    <% if (menuItem && menuItem.no_offer_today) { %>
+                        <%# ...i ako je označeno "Nema ponude", prikaži SPECIJALNU crvenu poruku. %>
+                        <p class="admin-info-italic no-offer-message" style="color: red; font-weight: bold; text-align: center;">
+    Nema ponude jela za ovaj dan - kuhinja ne radi.
+</p>
+                    <% } else if ((isCurrentWeek || isFutureWeek) && menuItem && menuItem.meal_1) { %>
+                        <%# ...ili ako se može glasati, prikaži opcije za glasanje. %>
+                        <%# (Ovdje ide vaša postojeća logika za radio gumbe i drugu smjenu) %>
                         <div class="meal-option radio-option">
-                            <input type="radio" 
-                                   id="choice_<%= day.dateString %>_2" 
-                                   name="choices[<%= day.dateString %>]" 
-                                   value="2"
-                                   onchange="handleChoiceChange('<%= day.dateString %>')"
-                                   <%= (userChoiceForThisDay && userChoiceForThisDay.option === 2) ? 'checked' : '' %>>
-                            <label for="choice_<%= day.dateString %>_2"><strong>2)</strong> <%- menuItem.meal_2 %></label>
+                           <input type="radio" id="choice_<%= day.dateString %>_1" name="choices[<%= day.dateString %>]" value="1" onchange="handleChoiceChange('<%= day.dateString %>')" <%= (userChoiceForThisDay && userChoiceForThisDay.option === 1) ? 'checked' : '' %>>
+                           <label for="choice_<%= day.dateString %>_1"><strong>1)</strong> <%- menuItem.meal_1 %></label>
                         </div>
+                        <% if (menuItem.has_two_options && menuItem.meal_2) { %>
+                           <div class="meal-option radio-option">
+                               <input type="radio" id="choice_<%= day.dateString %>_2" name="choices[<%= day.dateString %>]" value="2" onchange="handleChoiceChange('<%= day.dateString %>')" <%= (userChoiceForThisDay && userChoiceForThisDay.option === 2) ? 'checked' : '' %>>
+                               <label for="choice_<%= day.dateString %>_2"><strong>2)</strong> <%- menuItem.meal_2 %></label>
+                           </div>
+                        <% } %>
+                        <div class="choice-actions <%= (userChoiceForThisDay && userChoiceForThisDay.option) ? '' : 'hidden' %>" id="actions_<%= day.dateString %>">
+                            <div class="second-shift-checkbox"><input type="checkbox" id="shift_<%= day.dateString %>" name="shifts[<%= day.dateString %>]" <%= (userChoiceForThisDay && userChoiceForThisDay.isSecondShift) ? 'checked' : '' %>><label for="shift_<%= day.dateString %>">Označite za drugu smjenu</label></div>
+                            <button type="button" class="button-small button-link-style" onclick="clearChoice('<%= day.dateString %>')">Poništi odabir</button>
+                        </div>
+                    <% } else { %>
+                        <%# ...ili ako je prošli tjedan, prikaži povijest odabira. %>
+                        <p class="user-choice-past">Vaš odabir je bio: <strong><%= (userChoiceForThisDay && userChoiceForThisDay.description) ? userChoiceForThisDay.description : 'Niste imali odabir' %></strong><% if (userChoiceForThisDay && userChoiceForThisDay.isSecondShift) { %> (2. smjena)<% } %></p>
                     <% } %>
-
-                    <!-- AKCIJE: CHECKBOX ZA SMJENU I GUMB ZA PONIŠTAVANJE -->
-                    <div class="choice-actions <%= (userChoiceForThisDay && userChoiceForThisDay.option) ? '' : 'hidden' %>"
-                         id="actions_<%= day.dateString %>">
-                        <div class="second-shift-checkbox">
-                            <input type="checkbox"
-                                   id="shift_<%= day.dateString %>"
-                                   name="shifts[<%= day.dateString %>]"
-                                   <%= (userChoiceForThisDay && userChoiceForThisDay.isSecondShift) ? 'checked' : '' %>>
-                            <label for="shift_<%= day.dateString %>">Označite za drugu smjenu</label>
-                        </div>
-                        <button type="button"
-                                class="button-small button-link-style"
-                                onclick="clearChoice('<%= day.dateString %>')">
-                            Poništi odabir
-                        </button>
-                    </div>
-
-
                 <% } else { %>
-                    <%# Fallback poruke %>
-                    <% if (menuItem && menuItem.no_offer_today) { %><p class="admin-info-italic no-offer-message">Nema ponude jela za ovaj dan.</p><% } %>
-                    <% if (isFutureWeek && !isMenuPublished) { %><p class="admin-info-italic futura-week-message">Jelovnik za ovaj dan još nije dostupan.</p><% } %>
-                    <% if (isCurrentWeek && !isMenuPublished) { %><p class="admin-info-italic current-week-not-published-message">Jelovnik za ovaj dan još nije službeno objavljen.</p><% } %>
-                    <% if (!isCurrentWeek && !isFutureWeek) { /* Logika za prošli tjedan... */ %>
-    
-    <%# PRVO: Prikazujemo ponuđeni jelovnik za taj dan %>
-    <% if (isMenuPublished && menuItem && menuItem.meal_1 && menuItem.meal_1.trim() !== "") { %>
-        <div class="meal-option past-week-meal" style="background-color: #f8f9fa; border: none; padding: 5px 10px;">
-            <p>Ponuđeno Jelo 1: <%- menuItem.meal_1 %></p>
-        </div>
-        <% if (menuItem.has_two_options && menuItem.meal_2 && menuItem.meal_2.trim() !== "") { %>
-            <div class="meal-option past-week-meal" style="background-color: #f8f9fa; border: none; padding: 5px 10px;">
-                <p>Ponuđeno Jelo 2: <%- menuItem.meal_2 %></p>
-            </div>
-        <% } %>
-        <hr style="margin:15px 0; border: 0; border-top: 1px solid #eee;">
-    <% } else { %>
-         <p class="admin-info-italic centered-text" style="text-align:center;">Nema podataka o jelovniku za ovaj dan.</p>
-         <hr style="margin:15px 0; border: 0; border-top: 1px solid #eee;">
-    <% } %>
-    
-    <%# DRUGO: Prikazujemo što je korisnik odabrao %>
-    <p class="user-choice-past" style="padding: 10px; background-color: #e9f5e9; border-left: 3px solid #4CAF50; border-radius: 4px; margin-top:0;">
-        Vaš odabir je bio: <strong><%= (userChoiceForThisDay && userChoiceForThisDay.description) ? userChoiceForThisDay.description : 'Niste imali odabir' %></strong>
-        <% if (userChoiceForThisDay && userChoiceForThisDay.isSecondShift) { %>
-            <span style="font-weight: bold; color: #c0392b;">(2. smjena)</span>
-        <% } %>
-    </p>
-
-<% } %>
+                    <%# B. Ako jelovnik NIJE objavljen za ovaj tjedan, prikaži STANDARDNU, neutralnu poruku. %>
+                    <p class="admin-info-italic" style="text-align: center;">Jelovnik za ovaj dan nije dostupan.</p>
                 <% } %>
             </div>
         <% }); %>
@@ -144,20 +101,18 @@
 
 <script>
     function handleChoiceChange(dateString) {
-        const actionsDiv = document.getElementById(`actions_${dateString}`);
-        if (actionsDiv) {
-            actionsDiv.style.display = 'flex';
-        }
+    const actionsDiv = document.getElementById(`actions_${dateString}`);
+    if (actionsDiv) {
+        actionsDiv.classList.remove('hidden');
     }
+}
 
     function clearChoice(dateString) {
-        const radioButtons = document.querySelectorAll(`input[name="choices[${dateString}]"]`);
-        radioButtons.forEach(radio => { radio.checked = false; });
-        
-        const actionsDiv = document.getElementById(`actions_${dateString}`);
-        if (actionsDiv) {
-            actionsDiv.style.display = 'none';
-        }
+    // ...
+    const actionsDiv = document.getElementById(`actions_${dateString}`);
+    if (actionsDiv) {
+        actionsDiv.classList.add('hidden');
+    }
         
         const shiftCheckbox = document.getElementById(`shift_${dateString}`);
         if(shiftCheckbox) {

@@ -2,8 +2,8 @@
 
 <div class="guest-menu-info" style="text-align: center; margin-bottom: 25px; padding: 15px; background-color: #eef; border-radius: var(--border-radius-md, 8px);">
     <p style="font-size: 1.1em; color: #333;">
-        Molimo <a href="/login" style="color: var(--link-color); font-weight: bold; text-decoration: underline;">prijavite se</a> kako biste mogli odabrati željena jela za SLJEDEĆI TJEDAN.
-    </p>
+    Molimo <a href="/login" style="color: var(--link-color); font-weight: bold; text-decoration: underline;">prijavite se</a> kako biste mogli odabrati željena jela za <strong style="color: var(--link-color);">SLJEDEĆI TJEDAN</strong>.
+</p>
 </div>
 
 <h2 class="page-title">Popis jela za tjedan (<%= currentWeekDisplay %>):</h2>
@@ -23,82 +23,59 @@
     <% } %>
 </div>
 
-<!-- OPISNE PORUKE NA VRHU -->
+<%# --- VRAĆAMO OPISNE PORUKE NA VRHU OVDJE --- %>
 <% if (isCurrentWeek) { %>
-    <% if (isMenuPublished) { %><p class="page-description">Prikaz jelovnika za tekući tjedan.</p><% } else { %><p class="page-description" style="color: #e67e22; font-weight:bold;">Jelovnik za tekući tjedan još nije službeno objavljen.</p><% } %>
-<% } else if (isFutureWeek) { %><p class="page-description">Glasajte za idući tjedan.</p><% } else { // Prošli tjedan %>
-    <% if (isMenuPublished) { %><p class="page-description">Prikaz objavljenog jelovnika za odabrani prošli tjedan.</p><% } else { %><p class="page-description" style="color: #777;">Nema podataka o službeno objavljenom jelovniku za ovaj prošli tjedan.</p><% } %>
+    <% if (isMenuPublished) { %>
+        <p class="page-description" style="color: var(--primary-color); font-weight: bold;">Prikaz jelovnika za tekući tjedan</p>
+    <% } else { %>
+        <p class="page-description" style="color: #e67e22; font-weight:bold;">Jelovnik za tekući tjedan još nije službeno objavljen</p>
+    <% } %>
+<% } else if (isFutureWeek) { %>
+    <p class="page-description" style="color: var(--primary-color); font-weight: bold;">
+        Glasajte za idući tjedan</p>
+<% } else { // Prošli tjedan %>
+    <% if (isMenuPublished) { %>
+        <p class="page-description" style="color: var(--primary-color); font-weight: bold;">Prikaz objavljenog jelovnika za odabrani prošli tjedan</p>
+    <% } else { %>
+        <p class="page-description" style="color: var(--primary-color); font-weight: bold;">Nema podataka o službeno objavljenom jelovniku za ovaj prošli tjedan</p>
+    <% } %>
 <% } %>
-
-
+<!-- OPISNE PORUKE NA VRHU -->
 <div class="meal-display" style="display: flex; flex-direction: column; align-items: center; gap: 20px;"> 
     <% if (workWeekDays && workWeekDays.length > 0) { %>
         <% workWeekDays.forEach(day => { %>
-            <% const dayKey = day.dayKey; %>
-            <% const menuItem = displayedMenu[dayKey]; /* Već bi trebao biti fallbackan u ruti */ %>
-            <% 
-               let dayDisplayName = (menuItem && menuItem.name && menuItem.name !== "Nije definirano") 
-                                    ? menuItem.name 
-                                    : ( (locals.DAY_DISPLAY_NAMES && locals.DAY_DISPLAY_NAMES[dayKey]) 
-                                        ? locals.DAY_DISPLAY_NAMES[dayKey] 
-                                        : (dayKey ? dayKey.toUpperCase() : 'NEPOZNAT DAN') );
+            <%
+                const dayKey = day.dayKey;
+                const menuItem = displayedMenu[dayKey];
+                let dayDisplayName = (menuItem && menuItem.name) ? menuItem.name : (locals.DAY_DISPLAY_NAMES[dayKey] || dayKey.toUpperCase());
             %>
             
             <div class="day-card guest-day-card" style="width:100%; max-width:650px;">
-                <h3>
-                    <%= dayDisplayName %> 
-                    <% if (day && day.date) { %>
-                        (<%= formatDateToDDMMYYYY(day.date) %>)
-                    <% } %>
-                </h3>
+                <h3><%= dayDisplayName %> (<%= formatDateToDDMMYYYY(day.date) %>)</h3>
                 
-                <%# ISPRAVLJENA LOGIKA ZA PRIKAZ JELA/PORUKA %>
-<% if (isFutureWeek) { %>
-    <%# BUDUĆI TJEDAN %>
-    <% if (isMenuPublished && menuItem && menuItem.meal_1 && menuItem.meal_1.trim() !== "") { %>
-        <%# Ako je jelovnik objavljen, prikaži ga %>
-        <div class="meal-option">
-            <p><strong>1)</strong> <%- menuItem.meal_1 %></p>
-        </div>
-        <% if (menuItem.has_two_options && menuItem.meal_2 && menuItem.meal_2.trim() !== "") { %>
-            <div class="meal-option">
-                <p><strong>2)</strong> <%- menuItem.meal_2 %></p>
-            </div>
-        <% } %>
-    <% } else { %>
-        <%# Ako jelovnik NIJE objavljen, prikaži poruku %>
-        <p class="admin-info-italic futura-week-message" style="text-align:center;">Jelovnik za ovaj dan još nije dostupan.</p>
-    <% } %>
-<% } else if (isCurrentWeek && !isMenuPublished) { %>
-    <p class="admin-info-italic current-week-not-published-message" style="text-align:center;">Jelovnik za ovaj dan još nije službeno objavljen.</p>
-<% } else if (!isCurrentWeek && !isFutureWeek && !isMenuPublished) { // PROŠLI TJEDAN, a meni NIJE bio objavljen %>
-    <p class="admin-info-italic past-week-not-published-message" style="text-align:center;">Nema podataka o jelovniku za ovaj dan.</p> 
-<% } else if (menuItem && menuItem.no_offer_today) { %>
-     <p class="admin-info-italic no-offer-message" style="text-align:center; color: #d35400; font-weight:bold;">Nema ponude jela za ovaj dan.</p>
-<% } else if (menuItem && menuItem.meal_1 && menuItem.meal_1 !== "Nije definirano" && menuItem.meal_1.trim() !== "") { %>
-    <%# Prikaz jela ako su svi gornji uvjeti prošli i jelo 1 postoji %>
-    <div class="meal-option">
-        <p><strong>1)</strong> <%- menuItem.meal_1 %></p>
-    </div>
-    <% if (menuItem.has_two_options) { %>
-        <% if (menuItem.meal_2 && menuItem.meal_2 !== "Nije definirano" && menuItem.meal_2.trim() !== "") { %>
-            <div class="meal-option">
-                <p><strong>2)</strong> <%- menuItem.meal_2 %></p>
-            </div>
-            <% if (menuItem.option_2_prompt && menuItem.option_2_prompt.trim() !== "") { %>
-                <p class="choice-prompt"><em><%= menuItem.option_2_prompt %></em></p>
-            <% } %>
-        <% } else { %>
-            <p class="admin-info-italic" style="padding:10px;">Jelo 2 za ovaj dan nije definirano.</p>
-        <% } %>
-    <% } %>
+                <%# --- KONAČNA ISPRAVLJENA LOGIKA --- %>
+                <% if (isMenuPublished) { %>
+                    <%# A. Ako je jelovnik OBJAVLJEN... %>
+                    <% if (menuItem && menuItem.no_offer_today) { %>
+                        <%# ...i ako je označeno "Nema ponude", prikaži SPECIJALNU crvenu poruku. %>
+                        <p class="admin-info-italic no-offer-message" style="color: red; font-weight: bold;">
+                            Nema ponude jela za ovaj dan - kuhinja ne radi.
+                        </p>
+                    <% } else if (menuItem && menuItem.meal_1) { %>
+                        <%# ...ili ako ima jela, prikaži ih. %>
+                        <div class="meal-option"><p><strong>1)</strong> <%- menuItem.meal_1 %></p></div>
+                        <% if (menuItem.has_two_options && menuItem.meal_2) { %>
+                            <div class="meal-option"><p><strong>2)</strong> <%- menuItem.meal_2 %></p></div>
+                        <% } %>
+                    <% } else { %>
+                        <p class="admin-info-italic">Jelovnik za ovaj dan nije postavljen.</p>
+                    <% } %>
                 <% } else { %>
-                     <p class="admin-info-italic centered-text" style="padding:10px;text-align: center;">Jelovnik za ovaj dan još nije postavljen.</p>
+                    <%# B. Ako jelovnik NIJE objavljen, prikaži STANDARDNU, neutralnu poruku. %>
+                    <p class="admin-info-italic futura-week-message" style="text-align: center;">Jelovnik za ovaj dan nije dostupan.</p>
                 <% } %>
             </div>
         <% }); %>
-    <% } else { %>
-        <p style="text-align:center; margin-top: 20px;">Nema definiranih dana za prikaz.</p>
     <% } %>
 </div>
 
