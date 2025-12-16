@@ -2,14 +2,12 @@
 
 <h2 class="page-title">Popis jela za tjedan (<%= currentWeekDisplay %>):</h2>
 
-<!-- Navigacija kroz tjedne -->
 <div class="week-navigation" style="margin: 20px 0; display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border-color, #eee);">
     <% if (prevWeekLink) { %><a href="<%= prevWeekLink %>" class="button button-small">« Prethodni tjedan</a><% } else { %><span style="visibility: hidden;"><a class="button button-small">« Prethodni tjedan</a></span><% } %>
     <span style="font-weight: bold; color: var(--text-color, #333);">Odabir Tjedna</span>
     <% if (nextWeekLink) { %><a href="<%= nextWeekLink %>" class="button button-small">Sljedeći tjedan »</a><% } else { %><span style="visibility: hidden;"><a class="button button-small">Sljedeći tjedan »</a></span><% } %>
 </div>
 
-<!--OPISNE PORUKE NA VRHU -->
 <% if (isCurrentWeek) { %>
     <% if (isMenuPublished) { %><p class="page-description" style="color: var(--primary-color); font-weight: bold;">Tekući tjedan</p><% } else { %><p class="page-description" style="color: #e67e22; font-weight:bold;">Jelovnik za tekući tjedan još nije službeno objavljen</p><% } %>
 <% } else if (isFutureWeek) { %><p class="page-description" style="color: var(--primary-color); font-weight: bold;">Glasajte za idući tjedan !!</p><% } else { %><p class="page-description" style="color: var(--primary-color); font-weight: bold;">Prikaz objavljenog jelovnika za odabrani prošli tjedan</p><% } %>
@@ -74,7 +72,6 @@
     <% } %>
 </form>
 
-<!-- ISPRAVAN <style> BLOK -->
 <style>
     .choice-actions {
         display: flex;
@@ -108,17 +105,22 @@
 }
 
     function clearChoice(dateString) {
-    // ...
+
+    const radioButtons = document.querySelectorAll(`input[name="choices[${dateString}]"]`);
+    radioButtons.forEach(radio => {
+        radio.checked = false;
+    });
+    
     const actionsDiv = document.getElementById(`actions_${dateString}`);
     if (actionsDiv) {
         actionsDiv.classList.add('hidden');
     }
-        
-        const shiftCheckbox = document.getElementById(`shift_${dateString}`);
-        if(shiftCheckbox) {
-            shiftCheckbox.checked = false;
-        }
+    
+    const shiftCheckbox = document.getElementById(`shift_${dateString}`);
+    if(shiftCheckbox) {
+        shiftCheckbox.checked = false;
     }
+}
 </script>
 
 <%- include('partials/footer') %>
